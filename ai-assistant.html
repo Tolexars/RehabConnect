@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Document Assistant | REHABCONNECT</title>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <link rel="stylesheet" href="assets/css/ai-assistant.css">
+</head>
+<body>
+    <header class="l-header">
+        <nav class="nav bd-grid">
+            <div>
+                <h2><span class="home__title-color">REHAB</span>CONNECT</h2>
+            </div>
+            <div class="nav__menu" id="nav-menu">
+                <ul class="nav__list">
+                    <li class="nav__item"><a href="index.html" class="nav__link">Home</a></li>
+                    <li class="nav__item"><a href="professionals.html?category=All" class="nav__link">Professionals</a></li>
+                    <li class="nav__item"><a href="marketplace.html" class="nav__link">Marketplace</a></li>
+                    <li class="nav__item"><a href="blogs.html" class="nav__link">Blogs</a></li>
+                    <li class="nav__item"><a href="ai-assistant.html" class="nav__link active-link">AI Assistant</a></li>
+                    <li class="nav__item" id="my-profile-nav-item" style="display: none;"><a href="users.html" class="nav__link">My Profile</a></li>
+                    
+                    <div class="auth-buttons">
+                        <li class="nav_item"> <button id="login-btn" class="nav__link">Login</button></li>
+                        <li class="nav_item"><button id="logout-btn">Logout</button></li>
+                    </div>
+                </ul>
+            </div>
+            <div class="nav__toggle" id="nav-toggle">
+                <i class='bx bx-menu'></i>
+            </div>
+            <div class="profile-image-nav" id="nav-toggle" style="display: none;">
+                <img src="" alt="Profile" class="nav-profile-img">
+            </div>
+        </nav>
+    </header>
+
+    <main class="ai-assistant-container">
+        <section class="ai-header">
+            <h1>AI Document Assistant</h1>
+            <p>Upload medical reports or ask questions to get AI-powered insights and generated documents</p>
+        </section>
+
+        <div class="ai-main-content">
+            <div class="ai-input-section">
+                <div class="input-methods">
+                    <div class="method-tabs">
+                        <button class="method-tab active" data-method="question">Ask a Question</button>
+                        <button class="method-tab" data-method="upload">Upload Document</button>
+                    </div>
+
+                    <div class="method-content active" id="question-method">
+                        <textarea id="ai-question" placeholder="Ask any question about rehabilitation, medical conditions, or treatment plans..."></textarea>
+                        <button id="ask-question-btn" class="ai-action-btn">
+                            <i class='bx bx-send'></i> Get Answer
+                        </button>
+                    </div>
+
+                    <div class="method-content" id="upload-method">
+                        <div class="upload-area" id="upload-dropzone">
+                            <i class='bx bx-cloud-upload'></i>
+                            <p>Drag & drop files here or click to browse</p>
+                            <input type="file" id="file-upload" accept=".pdf,.docx,.pptx,.txt,.xlsx" multiple>
+                            <div class="file-preview" id="file-preview"></div>
+                        </div>
+                        <div class="upload-options">
+                            <select id="analysis-type">
+                                <option value="summary">Generate Summary</option>
+                                <option value="assessment">Create Assessment Report</option>
+                                <option value="treatment">Suggest Treatment Plan</option>
+                                <option value="custom">Custom Analysis</option>
+                            </select>
+                            <textarea id="custom-prompt" placeholder="Specific instructions for analysis (optional)" style="display: none;"></textarea>
+                            <button id="analyze-btn" class="ai-action-btn" disabled>
+                                <i class='bx bx-analyse'></i> Analyze Document
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ai-output-section">
+                <div class="output-header">
+                    <h3>AI Results</h3>
+                    <div class="output-actions">
+                        <button id="copy-btn" class="action-btn" title="Copy to clipboard">
+                            <i class='bx bx-copy'></i>
+                        </button>
+                        <button id="download-docx" class="action-btn" title="Download as DOCX">
+                            <i class='bx bxs-file-doc'></i>
+                        </button>
+                        <button id="download-pdf" class="action-btn" title="Download as PDF">
+                            <i class='bx bxs-file-pdf'></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="ai-output" id="ai-output">
+                    <div class="empty-state">
+                        <i class='bx bx-brain'></i>
+                        <p>Your AI-generated content will appear here</p>
+                    </div>
+                </div>
+                <div class="loading-state" id="loading-indicator">
+                    <div class="loading-spinner"></div>
+                    <p>Analyzing your request...</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="ai-features">
+            <h3>What you can do with AI Assistant</h3>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <i class='bx bx-file'></i>
+                    <h4>Document Analysis</h4>
+                    <p>Upload medical reports and get key insights extracted automatically</p>
+                </div>
+                <div class="feature-card">
+                    <i class='bx bx-edit'></i>
+                    <h4>Report Generation</h4>
+                    <p>Create professional assessment reports in multiple formats</p>
+                </div>
+                <div class="feature-card">
+                    <i class='bx bx-chat'></i>
+                    <h4>Q&A</h4>
+                    <p>Ask questions about rehabilitation and get evidence-based answers</p>
+                </div>
+                <div class="feature-card">
+                    <i class='bx bx-planet'></i>
+                    <h4>Treatment Plans</h4>
+                    <p>Generate personalized treatment recommendations</p>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>pdfjsLib.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth.js/1.6.0/mammoth.browser.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<script src="https://unpkg.com/docx@latest/build/index.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/mammoth@1.4.0/mammoth.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.5/xlsx.full.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
+    <script src="assets/js/configuration.js"></script>
+    <script src="assets/js/docx.js"></script>
+    <script src="assets/js/pdf-lib.js"></script>
+    <script src="assets/js/ai-assistant.js"></script>
+    <script src="assets/js/auth.js"></script>
+</body>
+</html>
