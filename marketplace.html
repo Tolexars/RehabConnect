@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="assets/css/styling.css">
+    <link rel="stylesheet" href="assets/css/loading.css">
+    <link href='https://cdn.jsdelivr.net/npm/boxicons@2.0.5/css/boxicons.min.css' rel='stylesheet'>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <title>RehabConnect Marketplace</title>
+</head>
+<body>
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <header class="l-header">
+        <nav class="nav bd-grid">
+            <div>
+                <h2>
+              </div>
+            
+            <div class="nav__search">
+                <i class='bx bx-search nav__search-icon' id="search-icon"></i>
+                <input type="search" class="nav__search-input" id="search-input" placeholder="Search items...">
+            </div>
+            
+            <div class="nav__menu" id="nav-menu">
+                <ul class="nav__list">
+                    <li class="nav__item"><a href="#home" class="nav__link active-link" id="active">Home</a></li>
+        <li class="nav__item"><a href="professionals.html?category=All" onclick="saveAppState()" class="nav__link">Professionals</a></li>
+        <li class="nav__item"><a href="marketplace.html" onclick="saveAppState()" class="nav__link">Marketplace</a></li>
+        <li class="nav__item"><a href="blogs.html" onclick="saveAppState()" class="nav__link">Blogs</a></li>
+        <li class="nav__item" id="my-profile-nav-item" style="display: none;"><a href="users.html?id=${user.uid}" class="nav__link">My Profile</a></li>
+        
+        <div class="auth-buttons">
+            <li class="nav_item"> <button id="login-btn" class="nav__link">Login</button></li>
+                </ul>
+            </div>
+            <div class="nav__toggle" id="nav-toggle">
+                <i class='bx bx-menu'></i>
+            </div>
+        </nav>
+        <div class="filter__container bd-grid">
+            <div class="filter__content">
+                <span class="filter__title">Filter by:</span>
+                <select name="category" id="category-filter" class="filter__select">
+                    <option value="all">All Categories</option>
+                    <option value="sensory materials">Sensory materials</option>
+                    <option value="puzzle">Puzzle</option>
+                    <option value="ball">Ball</option>
+                    <option value="weights">Weights</option>
+                    <option value="massager">Massager</option>
+                </select>
+            </div>
+            <div class="sort__container">
+                <span class="sort__title">Sort by:</span>
+                <select id="sort-by" class="sort__select">
+                    <option value="newest">Newest</option>
+                    <option value="oldest">Oldest</option>
+                    <option value="price-asc">Price: Low to High</option>
+                    <option value="price-desc">Price: High to Low</option>
+                </select>
+            </div>
+            
+        </div>
+    </header>
+
+    <main class="l-main">
+        <section class="work section" id="work">
+            <div class="container">
+                <div class="work3__container bd-grid" id="marketplace-items">
+                    </div>
+            </div>
+        </section>
+    </main>
+
+  <footer class="modern-footer">
+    <div class="footer-grid">
+        <!-- Column 1: Brand Info -->
+        <div class="footer-column">
+            <h3>REHABCONNECT</h3>
+            <p>Connecting patients with top healthcare professionals</p>
+            <div class="social-links">
+                <a href="#"><i class='bx bxl-facebook'></i></a>
+                <a href="#"><i class='bx bxl-twitter'></i></a>
+                <a href="#"><i class='bx bxl-instagram'></i></a>
+                <a href="#"><i class='bx bxl-linkedin'></i></a>
+            </div>
+        </div>
+        
+        <!-- Column 2: Quick Links -->
+        <div class="footer-column">
+            <h4>Quick Links</h4>
+            <ul>
+                <li><a href="index.html" >Home</a></li>
+                <li><a href="#about">About Us</a></li>
+                <li><a href="professionals.html" onclick="saveAppState()">Professionals</a></li>
+                <li><a href="marketplace.html" onclick="saveAppState()">Marketplace</a></li>
+                <li><a href="blog.html" onclick="saveAppState()">Blogs</a></li>
+            </ul>
+        </div>
+        
+        <!-- Column 3: Contact Info -->
+        <div class="footer-column">
+            <h4>Contact Us</h4>
+            <div class="contact-info">
+                <p><i class='bx bx-map'></i> 44, Shonola Street, Ogba, Lagos state</p>
+                <p><i class='bx bx-phone'></i> + (234) 8132-912-880</p>
+                <p><i class='bx bx-envelope'></i> info@rehabconnect.com</p>
+            </div>
+        </div>
+        
+        <!-- Column 4: Newsletter -->
+        <div class="footer-column">
+            <h4>Newsletter</h4>
+            <form class="newsletter-form">
+                <input type="email" placeholder="Your email address" required>
+                <button type="submit">Subscribe</button>
+            </form>
+        </div>
+    </div>
+    
+    <div class="footer-bottom">
+        <p>&copy; 2025 REHABCONNECT. All rights reserved.</p>
+        <div class="legal-links">
+            <a href="#">Privacy Policy</a>
+            <a href="#">Terms of Service</a>
+            <a href="#">Cookie Policy</a>
+        </div>
+    </div>
+</footer>
+
+    <script src="https://unpkg.com/scrollreveal"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script src="https://www.gstatic.com/firebasejs/5.5.0/firebase.js"></script>
+    <script src="assets/js/filter.js"></script>
+    <script src="assets/js/auth.js"></script>
+</body>
+</html>

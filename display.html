@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="assets/css/styling.css">
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <link href='https://cdn.jsdelivr.net/npm/boxicons@2.0.5/css/boxicons.min.css' rel='stylesheet'>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <title>Product Details</title>
+</head>
+<body>
+    <header class="l-header">
+        </header>
+
+    <main class="l-main">
+        <section class="detail section" id="detail">
+            <div class="detail__container bd-grid">
+                <div class="detail__img">
+                    <img id="product-image" src="" alt="">
+                </div>
+                <div class="detail__data">
+                    <h1 id="product-title"></h1>
+                    <p id="product-price"></p>
+                    <div class="detail__description">
+                        <p id="product-description"></p>
+                    </div>
+                    <div class="detail__delivery">
+                        <p id="product-delivery">Delivery fees and procedures will be displayed here.</p>
+                    </div>
+                    <div class="detail__actions">
+                        <div class="detail__quantity">
+                            <label for="quantity">Quantity:</label>
+                            <input type="number" id="quantity" name="quantity" value="1" min="1">
+                        </div>
+                        <button id="buy-now-button" class="button3">Buy Now</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+<div id="auth-modal" class="modal">
+    <div class="modal-content">
+        <span class="modal-close">&times;</span>
+        <div class="auth-tabs">
+            <div class="auth-tab active" data-form="login">Login</div>
+            <div class="auth-tab" data-form="register">Register</div>
+        </div>
+
+        <form id="login-form" class="auth-form active">
+            <div class="error-message" id="login-error"></div>
+            <div class="form-group">
+                <input type="email" id="login-email" placeholder="Email" required>
+            </div>
+            <div class="form-group">
+                <input type="password" id="login-password" placeholder="Password" required>
+            </div>
+            <button type="submit">Login</button>
+        </form>
+
+        <form id="register-form" class="auth-form">
+            <div class="error-message" id="register-error"></div>
+            <div class="form-group">
+                <input type="email" id="register-email" placeholder="Email" required>
+            </div>
+            <div class="form-group">
+                <input type="password" id="register-password"
+                       placeholder="Password (min. 6 characters)" required>
+            </div>
+            <button type="submit">Create Account</button>
+        </form>
+    </div>
+</div>
+
+    <footer class="footer">
+        </footer>
+
+    <script src="https://unpkg.com/scrollreveal"></script>
+    <script src="https://js.paystack.co/v1/inline.js"></script>
+
+    <script src="https://www.gstatic.com/firebasejs/5.5.0/firebase.js"></script> 
+    <script src="assets/js/configuration.js"></script>
+    <script src="assets/js/auth.js"></script>
+    <script src="assets/js/product_details.js"></script>
+</body>
+</html>
