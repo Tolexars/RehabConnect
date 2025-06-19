@@ -1,386 +1,421 @@
-// --- 1. API Endpoints Configuration ---
-// REPLACE THESE WITH YOUR ACTUAL DEPLOYED FIREBASE CLOUD FUNCTION URLs
-const API_ENDPOINTS = {
-    ASK_QUESTION: 'https://us-central1-tolexars-ac868.cloudfunctions.net/askQuestion',
-    UPLOAD_DOCUMENT: 'https://us-central1-tolexars-ac868.cloudfunctions.net/uploadDocument', // This function extracts text from file
-    ANALYZE_DOCUMENT: 'https://us-central1-tolexars-ac868.cloudfunctions.net/analyzeDocument' // This function sends extracted text to AI
-};
+document.addEventListener('DOMContentLoaded', function() {
+    // DOM Elements
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const fileInfo = document.getElementById('fileInfo');
+    const typeBtns = document.querySelectorAll('.type-btn');
+    const optionCards = document.querySelectorAll('.option-card');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const resultsSection = document.getElementById('resultsSection');
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+    const downloadBtn = document.getElementById('downloadReport');
+    
+    // API Configuration
+    const API_BASE_URL = 'https://api.openai.com/v1/chat/completions';
+const API_KEY = 'your-openai-key';  // Replace with your key
 
-// --- 2. DOM Element Selectors ---
-const methodTabs = document.querySelectorAll('.method-tab');
-const methodContents = document.querySelectorAll('.method-content');
-
-const aiQuestionInput = document.getElementById('ai-question');
-const askQuestionBtn = document.getElementById('ask-question-btn');
-
-const fileUploadInput = document.getElementById('file-upload');
-const uploadDropzone = document.getElementById('upload-dropzone');
-const filePreviewContainer = document.getElementById('file-preview');
-const analysisTypeSelect = document.getElementById('analysis-type');
-const customPromptTextarea = document.getElementById('custom-prompt');
-const analyzeBtn = document.getElementById('analyze-btn');
-
-const aiOutputDiv = document.getElementById('ai-output');
-const emptyStateDiv = aiOutputDiv.querySelector('.empty-state');
-const loadingIndicatorDiv = document.getElementById('loading-indicator');
-
-const copyBtn = document.getElementById('copy-btn');
-const downloadDocxBtn = document.getElementById('download-docx');
-const downloadPdfBtn = document.getElementById('download-pdf');
-
-let uploadedFile = null; // To store the selected file object
-
-// --- 3. Utility Functions ---
-
-function showLoading() {
-    emptyStateDiv.style.display = 'none';
-    aiOutputDiv.style.display = 'none'; // Hide content while loading
-    loadingIndicatorDiv.style.display = 'flex'; // Show spinner
-}
-
-function hideLoading() {
-    loadingIndicatorDiv.style.display = 'none';
-    aiOutputDiv.style.display = 'block'; // Show content area again
-    // Determine whether to show empty state or actual content based on aiOutputDiv.textContent
-    if (aiOutputDiv.innerText.trim() === '' || aiOutputDiv.innerText.trim() === 'Your AI-generated content will appear here') {
-        emptyStateDiv.style.display = 'flex';
-    } else {
-        emptyStateDiv.style.display = 'none';
-    }
-}
-
-function setOutput(content) {
-    aiOutputDiv.innerHTML = content; // Use innerHTML to allow for basic formatting (like bold, lists if AI outputs markdown/HTML)
-    hideLoading();
-}
-
-function clearOutput() {
-    aiOutputDiv.innerHTML = '';
-    emptyStateDiv.style.display = 'flex';
-    aiOutputDiv.style.display = 'block'; // Ensure it's block for empty state visibility
-}
-
-function enableOutputActions(enable = true) {
-    copyBtn.disabled = !enable;
-    downloadDocxBtn.disabled = !enable;
-    downloadPdfBtn.disabled = !enable;
-}
-
-// --- 4. Tab Switching Logic ---
-methodTabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-        // Deactivate all tabs and hide all content
-        methodTabs.forEach(t => t.classList.remove('active'));
-        methodContents.forEach(c => c.classList.remove('active'));
-
-        // Activate clicked tab and show corresponding content
-        tab.classList.add('active');
-        const targetMethod = tab.dataset.method;
-        document.getElementById(`${targetMethod}-method`).classList.add('active');
-
-        // Clear output when switching tabs
-        clearOutput();
-        enableOutputActions(false);
-        uploadedFile = null; // Clear any loaded file
-        filePreviewContainer.innerHTML = ''; // Clear file preview
-        fileUploadInput.value = ''; // Clear file input
-        analyzeBtn.disabled = true; // Disable analyze button on tab switch
-        aiQuestionInput.value = ''; // Clear question input
-    });
-});
-
-// --- 5. Ask Question Logic ---
-askQuestionBtn.addEventListener('click', async () => {
-    const question = aiQuestionInput.value.trim();
-    if (!question) {
-        setOutput('<p style="color:red;">Please enter your question.</p>');
-        return;
-    }
-
-    showLoading();
-    askQuestionBtn.disabled = true;
-    enableOutputActions(false);
-    clearOutput(); // Clear previous output before new request
-
-    try {
-        const response = await fetch(API_ENDPOINTS.ASK_QUESTION, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ question: question }),
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-            setOutput(`<div class="document-content">${formatAIOutput(data.answer)}</div>`);
-            enableOutputActions(true);
-        } else {
-            setOutput(`<p style="color:red;">Error: ${data.error || 'Something went wrong.'}</p>`);
+async function analyzeMedicalText(text) {
+  const response = await fetch(API_BASE_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer $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`
+    },
+    body: JSON.stringify({
+      model: "gpt-4-turbo",
+      messages: [
+        {
+          role: "system",
+          content: "You are a medical AI assistant. Analyze the following medical report and provide a diagnosis, treatment plan, and recommendations."
+        },
+        {
+          role: "user",
+          content: text
         }
-    } catch (error) {
-        console.error('Error asking question:', error);
-        setOutput('<p style="color:red;">An error occurred while connecting to the AI. Please check your internet connection or try again later.</p>');
-    } finally {
-        askQuestionBtn.disabled = false;
-        hideLoading();
-    }
-});
-
-
-// --- 6. Document Upload & Analysis Logic ---
-
-// Handle custom prompt visibility
-analysisTypeSelect.addEventListener('change', () => {
-    if (analysisTypeSelect.value === 'custom') {
-        customPromptTextarea.style.display = 'block';
-    } else {
-        customPromptTextarea.style.display = 'none';
-    }
-});
-
-// File input change handler
-fileUploadInput.addEventListener('change', (event) => {
-    handleFiles(event.target.files);
-});
-
-// Drag and Drop handlers
-uploadDropzone.addEventListener('dragover', (event) => {
-    event.preventDefault();
-    uploadDropzone.classList.add('hover');
-});
-
-uploadDropzone.addEventListener('dragleave', () => {
-    uploadDropzone.classList.remove('hover');
-});
-
-uploadDropzone.addEventListener('drop', (event) => {
-    event.preventDefault();
-    uploadDropzone.classList.remove('hover');
-    handleFiles(event.dataTransfer.files);
-});
-
-function handleFiles(files) {
-    filePreviewContainer.innerHTML = ''; // Clear previous preview
-    uploadedFile = null; // Reset uploaded file
-
-    if (files.length > 0) {
-        uploadedFile = files[0]; // We only process one file for simplicity
-        displayFilePreview(uploadedFile);
-        analyzeBtn.disabled = false; // Enable analyze button
-    } else {
-        analyzeBtn.disabled = true; // Disable if no file
-    }
+      ],
+      temperature: 0.3  // Lower = more deterministic
+    })
+  });
+  return await response.json();
 }
-
-function displayFilePreview(file) {
-    const item = document.createElement('div');
-    item.classList.add('file-preview-item');
-    item.innerHTML = `
-        <span>${file.name} (${(file.size / 1024).toFixed(2)} KB)</span>
-        <i class='bx bx-x remove-file' data-filename="${file.name}"></i>
-    `;
-    filePreviewContainer.appendChild(item);
-
-    // Add event listener to remove button
-    item.querySelector('.remove-file').addEventListener('click', () => {
-        uploadedFile = null;
-        fileUploadInput.value = ''; // Clear the input as well
-        filePreviewContainer.innerHTML = '';
-        analyzeBtn.disabled = true;
-    });
-}
-
-// Analyze Document Button Click
-analyzeBtn.addEventListener('click', async () => {
-    if (!uploadedFile) {
-        setOutput('<p style="color:red;">Please upload a document first.</p>');
-        return;
+    
+    // State variables
+    let uploadedFile = null;
+    let documentType = 'medical';
+    let selectedOptions = [];
+    let analysisResults = null;
+    
+    // Initialize the app
+    init();
+    
+    function init() {
+        setupEventListeners();
     }
-
-    showLoading();
-    analyzeBtn.disabled = true;
-    enableOutputActions(false);
-    clearOutput(); // Clear previous output before new request
-
-    try {
-        // Step 1: Upload document to Cloud Function for text extraction
+    
+    function setupEventListeners() {
+        // Drag and drop events
+        dropZone.addEventListener('click', () => fileInput.click());
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('highlight');
+        });
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('highlight');
+        });
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('highlight');
+            
+            if (e.dataTransfer.files.length) {
+                handleFileUpload(e.dataTransfer.files[0]);
+            }
+        });
+        
+        // File input change
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length) {
+                handleFileUpload(fileInput.files[0]);
+            }
+        });
+        
+        // Document type selection
+        typeBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                typeBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                documentType = btn.dataset.type;
+                updateAnalyzeButtonState();
+            });
+        });
+        
+        // Analysis option selection
+        optionCards.forEach(card => {
+            card.addEventListener('click', () => {
+                card.classList.toggle('selected');
+                const option = card.dataset.option;
+                
+                if (card.classList.contains('selected')) {
+                    if (!selectedOptions.includes(option)) {
+                        selectedOptions.push(option);
+                    }
+                } else {
+                    selectedOptions = selectedOptions.filter(opt => opt !== option);
+                }
+                
+                updateAnalyzeButtonState();
+            });
+        });
+        
+        // Analyze button
+        analyzeBtn.addEventListener('click', analyzeDocument);
+        
+        // Tab switching
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tabId = btn.dataset.tab;
+                
+                tabBtns.forEach(b => b.classList.remove('active'));
+                tabContents.forEach(c => c.classList.remove('active'));
+                
+                btn.classList.add('active');
+                document.getElementById(`${tabId}Tab`).classList.add('active');
+            });
+        });
+        
+        // Download report
+        downloadBtn.addEventListener('click', downloadReport);
+    }
+    
+    function handleFileUpload(file) {
+        // Validate file type
+        const validTypes = ['application/pdf', 'application/msword', 
+                          'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 
+                          'text/plain'];
+        
+        if (!validTypes.includes(file.type) && !file.name.match(/\.(pdf|doc|docx|txt)$/i)) {
+            showError('Please upload a PDF, DOC, DOCX, or TXT file.');
+            return;
+        }
+        
+        // Validate file size (10MB max)
+        if (file.size > 10 * 1024 * 1024) {
+            showError('File size should be less than 10MB.');
+            return;
+        }
+        
+        uploadedFile = file;
+        displayFileInfo(file);
+        updateAnalyzeButtonState();
+    }
+    
+    function displayFileInfo(file) {
+        fileInfo.innerHTML = `
+            <p><span>File Name:</span> <span>${file.name}</span></p>
+            <p><span>File Type:</span> <span>${file.type || file.name.split('.').pop().toUpperCase()}</span></p>
+            <p><span>File Size:</span> <span>${formatFileSize(file.size)}</span></p>
+        `;
+        fileInfo.classList.add('show');
+    }
+    
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+    
+    function updateAnalyzeButtonState() {
+        analyzeBtn.disabled = !(uploadedFile && selectedOptions.length > 0);
+    }
+    
+    async function analyzeDocument() {
+        if (!uploadedFile || selectedOptions.length === 0) return;
+        
+        // Show loading state
+        resultsSection.classList.remove('hidden');
+        document.getElementById('summaryContent').classList.add('hidden');
+        document.querySelector('.loading-spinner').classList.remove('hidden');
+        
+        try {
+            // First upload the file to get a document ID
+            const uploadResponse = await uploadDocument(uploadedFile);
+            const documentId = uploadResponse.documentId;
+            
+            // Then request analysis
+            const analysisResponse = await requestAnalysis(documentId, documentType, selectedOptions);
+            analysisResults = analysisResponse;
+            
+            // Display results
+            displayResults(analysisResults);
+            
+            // Hide loading spinner
+            document.querySelector('.loading-spinner').classList.add('hidden');
+            document.getElementById('summaryContent').classList.remove('hidden');
+            
+        } catch (error) {
+            console.error('Analysis failed:', error);
+            showError('Analysis failed. Please try again later.');
+            document.querySelector('.loading-spinner').classList.add('hidden');
+        }
+    }
+    
+    async function uploadDocument(file) {
         const formData = new FormData();
-        formData.append('document', uploadedFile);
-
-        const uploadResponse = await fetch(API_ENDPOINTS.UPLOAD_DOCUMENT, {
+        formData.append('file', file);
+        
+        const response = await fetch(`${API_BASE_URL}/upload`, {
             method: 'POST',
-            body: formData,
+            headers: {
+                'Authorization': `Bearer ${API_KEY}`
+            },
+            body: formData
         });
-
-        const uploadData = await uploadResponse.json();
-
-        if (!uploadResponse.ok) {
-            throw new Error(uploadData.error || 'Failed to upload and extract text.');
+        
+        if (!response.ok) {
+            throw new Error('File upload failed');
         }
-
-        const extractedText = uploadData.extractedText;
-        if (!extractedText || extractedText.trim() === '') {
-            throw new Error('No readable text found in the document or unsupported file type.');
-        }
-
-        // Determine the prompt based on analysis type
-        let userQuery = '';
-        const analysisType = analysisTypeSelect.value;
-        const customPrompt = customPromptTextarea.value.trim();
-
-        if (analysisType === 'summary') {
-            userQuery = 'Provide a concise summary of the document.';
-        } else if (analysisType === 'assessment') {
-            userQuery = 'Based on the medical report, generate a structured assessment report, including findings, diagnoses, and recommendations.';
-        } else if (analysisType === 'treatment') {
-            userQuery = 'Suggest a comprehensive treatment plan based on the medical information in the document.';
-        } else if (analysisType === 'custom') {
-            userQuery = customPrompt;
-        }
-
-        if (!userQuery) {
-            throw new Error('Please select an analysis type or enter a custom prompt.');
-        }
-
-        // Step 2: Send extracted text to another Cloud Function for AI analysis
-        const analyzeResponse = await fetch(API_ENDPOINTS.ANALYZE_DOCUMENT, {
+        
+        return await response.json();
+    }
+    
+    async function requestAnalysis(documentId, docType, options) {
+        const response = await fetch(`${API_BASE_URL}/analyze`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Authorization': `Bearer ${API_KEY}`
             },
-            body: JSON.stringify({ documentText: extractedText, userQuery: userQuery }),
+            body: JSON.stringify({
+                document_id: documentId,
+                document_type: docType,
+                analysis_options: options
+            })
         });
-
-        const analyzeData = await analyzeResponse.json();
-
-        if (analyzeResponse.ok) {
-            setOutput(`<div class="document-content">${formatAIOutput(analyzeData.analysis)}</div>`);
-            enableOutputActions(true);
-        } else {
-            setOutput(`<p style="color:red;">Error: ${analyzeData.error || 'Failed to analyze document.'}</p>`);
+        
+        if (!response.ok) {
+            throw new Error('Analysis request failed');
         }
-
-    } catch (error) {
-        console.error('Document analysis error:', error);
-        setOutput(`<p style="color:red;">Error: ${error.message || 'An unexpected error occurred during document processing.'}</p>`);
-    } finally {
-        analyzeBtn.disabled = false;
-        hideLoading();
+        
+        return await response.json();
     }
-});
-
-
-// --- 7. Output Actions (Copy, Download DOCX, Download PDF) ---
-
-copyBtn.addEventListener('click', () => {
-    const textToCopy = aiOutputDiv.innerText; // Get plain text from output
-    navigator.clipboard.writeText(textToCopy)
-        .then(() => {
-            alert('Content copied to clipboard!');
-            // Optional: Provide a visual cue (e.g., button changes text temporarily)
-        })
-        .catch(err => {
-            console.error('Failed to copy text: ', err);
-            alert('Failed to copy content.');
-        });
-});
-
-// Function to format AI output (e.g., convert markdown to HTML)
-// Gemini often outputs markdown, so this helps render it nicely.
-function formatAIOutput(text) {
-    // Basic markdown to HTML conversion for common elements
-    // This is a very simple converter. For robust markdown, use a library like 'marked.js'
-    let html = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); // Bold
-    html = html.replace(/\*(.*?)\*/g, '<em>$1</em>'); // Italic
-    html = html.replace(/^- (.*)/gm, '<li>$1</li>'); // Unordered lists
-    html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>'); // Wrap lists
-    html = html.replace(/```(.*?)```/gs, '<pre><code>$1</code></pre>'); // Code blocks
-    html = html.replace(/\n/g, '<br>'); // Newlines to breaks
-
-    // Add additional styling classes for document content
-    // For example, if you want specific headings, you'd parse more complex markdown.
-    // For now, it will apply to all text output.
-    return html;
-}
-
-// Download as DOCX
-downloadDocxBtn.addEventListener('click', async () => {
-    const aiContent = aiOutputDiv.innerText; // Get plain text content
-
-    if (!aiContent.trim()) {
-        alert('No content to download.');
-        return;
+    
+    function displayResults(results) {
+        // Format and display results in each tab
+        document.getElementById('summaryContent').innerHTML = formatSummary(results);
+        document.getElementById('detailsContent').innerHTML = formatDetails(results);
+        document.getElementById('recommendationsContent').innerHTML = formatRecommendations(results);
+        document.getElementById('referencesContent').innerHTML = formatReferences(results);
     }
-
-    // Using the 'docx' library (from CDN https://unpkg.com/docx@latest/build/index.js)
-    // NOTE: This generates a *basic* DOCX from plain text. It does NOT replicate Gamma's
-    // advanced formatting or AI-driven layout generation.
-    const doc = new docx.Document({
-        sections: [{
-            properties: {},
-            children: [
-                new docx.Paragraph({
-                    children: [
-                        new docx.TextRun({ text: aiContent, break: true }), // break: true for new lines
-                    ],
-                }),
-            ],
-        }],
-    });
-
-    try {
-        const buffer = await docx.Packer.toBuffer(doc);
-        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'ai_assistant_output.docx';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url); // Clean up
-    } catch (error) {
-        console.error('Error generating DOCX:', error);
-        alert('Failed to generate DOCX file. Please check console for details.');
-    }
-});
-
-// Download as PDF
-downloadPdfBtn.addEventListener('click', () => {
-    const aiContent = aiOutputDiv.innerText; // Get plain text content
-
-    if (!aiContent.trim()) {
-        alert('No content to download.');
-        return;
-    }
-
-    // Using jsPDF (from CDN https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js)
-    // NOTE: This generates a *basic* PDF from plain text. It does NOT replicate Gamma's
-    // advanced formatting or AI-driven layout generation.
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const margin = 10;
-    const lineHeight = 10; // Approx line height
-    let y = margin;
-
-    const lines = doc.splitTextToSize(aiContent, pageWidth - 2 * margin);
-
-    for (let i = 0; i < lines.length; i++) {
-        if (y + lineHeight > doc.internal.pageSize.getHeight() - margin) {
-            doc.addPage();
-            y = margin;
+    
+    function formatSummary(results) {
+        let html = '<div class="result-section">';
+        
+        if (results.diagnosis) {
+            html += `
+                <h3>Potential Diagnoses</h3>
+                <ul>
+                    ${results.diagnosis.map(d => `<li>${d.name} (${d.code}) - ${d.confidence}% confidence</li>`).join('')}
+                </ul>
+            `;
         }
-        doc.text(lines[i], margin, y);
-        y += lineHeight;
+        
+        if (results.treatment_plan) {
+            html += `
+                <h3>Recommended Treatment Approach</h3>
+                <ol>
+                    ${results.treatment_plan.steps.map(step => `<li>${step}</li>`).join('')}
+                </ol>
+            `;
+        }
+        
+        if (results.progress_assessment) {
+            html += `
+                <h3>Progress Assessment</h3>
+                <p>${results.progress_assessment.summary}</p>
+                <p>Key metrics: ${results.progress_assessment.metrics.join(', ')}</p>
+            `;
+        }
+        
+        html += '</div>';
+        return html;
     }
-
-    doc.save('ai_assistant_output.pdf');
+    
+    function formatDetails(results) {
+        let html = '<div class="result-section">';
+        
+        if (results.diagnosis_details) {
+            html += `
+                <h3>Diagnostic Considerations</h3>
+                <p>${results.diagnosis_details.rationale}</p>
+                <h4>Differential Diagnosis</h4>
+                <ul>
+                    ${results.diagnosis_details.differential.map(d => `<li>${d}</li>`).join('')}
+                </ul>
+            `;
+        }
+        
+        if (results.treatment_rationale) {
+            html += `
+                <h3>Treatment Rationale</h3>
+                <p>${results.treatment_rationale}</p>
+            `;
+        }
+        
+        html += '</div>';
+        return html;
+    }
+    
+    function formatRecommendations(results) {
+        let html = '<div class="result-section">';
+        
+        if (results.recommendations) {
+            html += `
+                <h3>Clinical Recommendations</h3>
+                <ol>
+                    ${results.recommendations.map(r => `<li>${r}</li>`).join('')}
+                </ol>
+            `;
+        }
+        
+        if (results.follow_up) {
+            html += `
+                <h3>Follow-up Plan</h3>
+                <p>${results.follow_up.plan}</p>
+                <p>Next review: ${results.follow_up.next_review}</p>
+            `;
+        }
+        
+        html += '</div>';
+        return html;
+    }
+    
+    function formatReferences(results) {
+        let html = '<div class="result-section">';
+        
+        if (results.references) {
+            html += `
+                <h3>Evidence-Based References</h3>
+                <ul>
+                    ${results.references.map(ref => `
+                        <li>
+                            <strong>${ref.title}</strong><br>
+                            ${ref.authors}<br>
+                            <em>${ref.source}</em>, ${ref.year}
+                        </li>
+                    `).join('')}
+                </ul>
+            `;
+        }
+        
+        if (results.guidelines) {
+            html += `
+                <h3>Clinical Guidelines</h3>
+                <ul>
+                    ${results.guidelines.map(g => `<li>${g.name} (${g.organization}, ${g.year})</li>`).join('')}
+                </ul>
+            `;
+        }
+        
+        html += '</div>';
+        return html;
+    }
+    
+    async function downloadReport() {
+        if (!analysisResults) {
+            showError('No analysis results to download');
+            return;
+        }
+        
+        try {
+            // Show loading state for download
+            downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating Report...';
+            downloadBtn.disabled = true;
+            
+            // Request PDF generation from API
+            const response = await fetch(`${API_BASE_URL}/generate-report`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${API_KEY}`
+                },
+                body: JSON.stringify({
+                    analysis_id: analysisResults.analysis_id,
+                    format: 'pdf'
+                })
+            });
+            
+            if (!response.ok) {
+                throw new Error('Report generation failed');
+            }
+            
+            // Get the PDF blob
+            const blob = await response.blob();
+            
+            // Create download link
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `medical_report_${new Date().toISOString().split('T')[0]}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            
+            // Clean up
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            
+        } catch (error) {
+            console.error('Download failed:', error);
+            showError('Failed to generate report. Please try again.');
+        } finally {
+            downloadBtn.innerHTML = '<i class="fas fa-download"></i> Download Full Report';
+            downloadBtn.disabled = false;
+        }
+    }
+    
+    function showError(message) {
+        // Simple error notification - you could use a more sophisticated UI
+        alert(message);
+    }
 });
-
-// --- Initial State ---
-hideLoading(); // Ensure loading indicator is hidden initially
-enableOutputActions(false); // Disable download/copy buttons initially
