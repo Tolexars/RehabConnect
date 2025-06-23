@@ -10,35 +10,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const tabBtns = document.querySelectorAll('.tab-btn');
     const tabContents = document.querySelectorAll('.tab-content');
     const downloadBtn = document.getElementById('downloadReport');
+    const loadingSpinner = document.querySelector('.loading-spinner');
+    const summaryContent = document.getElementById('summaryContent');
     
-    // API Configuration
-    const API_BASE_URL = 'https://api.openai.com/v1/chat/completions';
-const API_KEY = 'your-openai-key';  // Replace with your key
-
-async function analyzeMedicalText(text) {
-  const response = await fetch(API_BASE_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer $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`
-    },
-    body: JSON.stringify({
-      model: "gpt-4-turbo",
-      messages: [
-        {
-          role: "system",
-          content: "You are a medical AI assistant. Analyze the following medical report and provide a diagnosis, treatment plan, and recommendations."
-        },
-        {
-          role: "user",
-          content: text
-        }
-      ],
-      temperature: 0.3  // Lower = more deterministic
-    })
-  });
-  return await response.json();
-}
+    // GitHub Configuration
+    const GITHUB_TOKEN = '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';
+    const GITHUB_API_URL = 'https://models.github.ai/inference/chat/completions';
+    const AI_MODEL = 'openai/gpt-4.1';  // Using the specified model
     
     // State variables
     let uploadedFile = null;
@@ -175,70 +153,167 @@ async function analyzeMedicalText(text) {
         
         // Show loading state
         resultsSection.classList.remove('hidden');
-        document.getElementById('summaryContent').classList.add('hidden');
-        document.querySelector('.loading-spinner').classList.remove('hidden');
+        summaryContent.classList.add('hidden');
+        loadingSpinner.classList.remove('hidden');
+        analyzeBtn.disabled = true;
+        analyzeBtn.textContent = 'Analyzing...';
         
         try {
-            // First upload the file to get a document ID
-            const uploadResponse = await uploadDocument(uploadedFile);
-            const documentId = uploadResponse.documentId;
+            // Read file content
+            const fileContent = await readFileAsText(uploadedFile);
             
-            // Then request analysis
-            const analysisResponse = await requestAnalysis(documentId, documentType, selectedOptions);
+            // Analyze content using GitHub AI API
+            const analysisResponse = await analyzeWithGitHubAI(fileContent);
             analysisResults = analysisResponse;
             
             // Display results
             displayResults(analysisResults);
             
             // Hide loading spinner
-            document.querySelector('.loading-spinner').classList.add('hidden');
-            document.getElementById('summaryContent').classList.remove('hidden');
+            loadingSpinner.classList.add('hidden');
+            summaryContent.classList.remove('hidden');
             
         } catch (error) {
             console.error('Analysis failed:', error);
             showError('Analysis failed. Please try again later.');
-            document.querySelector('.loading-spinner').classList.add('hidden');
+            loadingSpinner.classList.add('hidden');
+        } finally {
+            analyzeBtn.disabled = false;
+            analyzeBtn.textContent = 'Analyze Document';
         }
     }
     
-    async function uploadDocument(file) {
-        const formData = new FormData();
-        formData.append('file', file);
-        
-        const response = await fetch(`${API_BASE_URL}/upload`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${API_KEY}`
-            },
-            body: formData
+    function readFileAsText(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (event) => resolve(event.target.result);
+            reader.onerror = (error) => reject(error);
+            
+            if (file.type === 'application/pdf') {
+                // For PDFs, we'll extract text using a simple method
+                // Note: In production, use a proper PDF parser like pdf.js
+                reader.readAsDataURL(file);
+                resolve("PDF content extraction would require specialized library");
+            } else {
+                reader.readAsText(file);
+            }
         });
-        
-        if (!response.ok) {
-            throw new Error('File upload failed');
-        }
-        
-        return await response.json();
     }
     
-    async function requestAnalysis(documentId, docType, options) {
-        const response = await fetch(`${API_BASE_URL}/analyze`, {
+    async function analyzeWithGitHubAI(content) {
+        // Prepare the prompt based on selected options
+        const prompt = createMedicalPrompt(content, documentType, selectedOptions);
+        
+        const response = await fetch(GITHUB_API_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${API_KEY}`
+                'Authorization': `Bearer ${GITHUB_TOKEN}`
             },
             body: JSON.stringify({
-                document_id: documentId,
-                document_type: docType,
-                analysis_options: options
+                model: AI_MODEL,
+                messages: [
+                    {
+                        role: "system",
+                        content: "You are an experienced medical AI assistant. Analyze medical documents and provide professional assessments with evidence-based recommendations."
+                    },
+                    {
+                        role: "user",
+                        content: prompt
+                    }
+                ],
+                temperature: 1,
+                top_p: 1,
+                max_tokens: 4096
             })
         });
         
         if (!response.ok) {
-            throw new Error('Analysis request failed');
+            const errorData = await response.json();
+            throw new Error(`API Error: ${errorData.error?.message || 'Unknown error'}`);
         }
         
-        return await response.json();
+        const data = await response.json();
+        return parseAIResponse(data.choices[0].message.content);
+    }
+    
+    function createMedicalPrompt(content, docType, options) {
+        const documentTypes = {
+            medical: "medical report",
+            psychology: "psychological assessment",
+            physio: "physiotherapy evaluation",
+            occupational: "occupational therapy assessment"
+        };
+        
+        const analysisOptions = {
+            diagnose: "potential diagnoses with confidence levels",
+            treatment: "comprehensive treatment plan",
+            progress: "progress assessment report",
+            medication: "medication review and adjustments",
+            timeline: "recovery timeline with milestones",
+            referral: "specialist referral recommendations"
+        };
+        
+        const selectedAnalysis = options.map(opt => analysisOptions[opt]).join(', ');
+        
+        return `Analyze the following ${documentTypes[docType]} and provide:
+1. ${selectedAnalysis}
+
+Document content:
+${content.substring(0, 8000)}  [truncated if too long]
+
+Format your response in JSON with these sections:
+- diagnosis: { primary: { name, code, confidence }, differential: [names] }
+- treatment_plan: { goals: [], interventions: [], timeline: string }
+- progress_assessment: { summary: string, metrics: [] }
+- recommendations: { clinical: [], lifestyle: [], specialists []}
+- references: [ { title, authors, source, year } ]`;
+    }
+    
+    function parseAIResponse(responseText) {
+        try {
+            // Try to parse as JSON
+            const jsonMatch = responseText.match(/```json([\s\S]*?)```/);
+            if (jsonMatch) {
+                return JSON.parse(jsonMatch[1]);
+            }
+            
+            // Fallback: look for JSON without code block
+            const jsonStart = responseText.indexOf('{');
+            const jsonEnd = responseText.lastIndexOf('}');
+            if (jsonStart !== -1 && jsonEnd !== -1) {
+                const jsonString = responseText.substring(jsonStart, jsonEnd + 1);
+                return JSON.parse(jsonString);
+            }
+            
+            // Fallback to plain text parsing
+            return {
+                diagnosis: {
+                    primary: { name: "Unable to parse", code: "N/A", confidence: 0 },
+                    differential: []
+                },
+                treatment_plan: {
+                    goals: ["Response parsing failed"],
+                    interventions: [],
+                    timeline: "N/A"
+                },
+                progress_assessment: {
+                    summary: "Could not parse AI response",
+                    metrics: []
+                },
+                recommendations: {
+                    clinical: ["Check API response format"],
+                    specialists: [],
+                    lifestyle: []                                                          
+                },
+                references: []
+            };
+        } catch (e) {
+            console.error('Failed to parse AI response:', e);
+            return {
+                error: 'Failed to parse analysis results'
+            };
+        }
     }
     
     function displayResults(results) {
@@ -255,26 +330,32 @@ async function analyzeMedicalText(text) {
         if (results.diagnosis) {
             html += `
                 <h3>Potential Diagnoses</h3>
-                <ul>
-                    ${results.diagnosis.map(d => `<li>${d.name} (${d.code}) - ${d.confidence}% confidence</li>`).join('')}
-                </ul>
-            `;
+                <p><strong>Primary:</strong> ${results.diagnosis.primary.name} (${results.diagnosis.primary.code}) - ${results.diagnosis.primary.confidence}% confidence</p>`;
+            
+            if (results.diagnosis.differential && results.diagnosis.differential.length > 0) {
+                html += `
+                    <h4>Differential Diagnosis</h4>
+                    <ul>
+                        ${results.diagnosis.differential.map(d => `<li>${d}</li>`).join('')}
+                    </ul>
+                `;
+            }
         }
         
         if (results.treatment_plan) {
             html += `
-                <h3>Recommended Treatment Approach</h3>
+                <h3>Treatment Plan</h3>
+                <h4>Goals</h4>
+                <ul>
+                    ${results.treatment_plan.goals.map(g => `<li>${g}</li>`).join('')}
+                </ul>
+                
+                <h4>Interventions</h4>
                 <ol>
-                    ${results.treatment_plan.steps.map(step => `<li>${step}</li>`).join('')}
+                    ${results.treatment_plan.interventions.map(i => `<li>${i}</li>`).join('')}
                 </ol>
-            `;
-        }
-        
-        if (results.progress_assessment) {
-            html += `
-                <h3>Progress Assessment</h3>
-                <p>${results.progress_assessment.summary}</p>
-                <p>Key metrics: ${results.progress_assessment.metrics.join(', ')}</p>
+                
+                <p><strong>Timeline:</strong> ${results.treatment_plan.timeline}</p>
             `;
         }
         
@@ -285,21 +366,15 @@ async function analyzeMedicalText(text) {
     function formatDetails(results) {
         let html = '<div class="result-section">';
         
-        if (results.diagnosis_details) {
+        if (results.progress_assessment) {
             html += `
-                <h3>Diagnostic Considerations</h3>
-                <p>${results.diagnosis_details.rationale}</p>
-                <h4>Differential Diagnosis</h4>
+                <h3>Progress Assessment</h3>
+                <p>${results.progress_assessment.summary}</p>
+                
+                <h4>Key Metrics</h4>
                 <ul>
-                    ${results.diagnosis_details.differential.map(d => `<li>${d}</li>`).join('')}
+                    ${results.progress_assessment.metrics.map(m => `<li>${m}</li>`).join('')}
                 </ul>
-            `;
-        }
-        
-        if (results.treatment_rationale) {
-            html += `
-                <h3>Treatment Rationale</h3>
-                <p>${results.treatment_rationale}</p>
             `;
         }
         
@@ -314,16 +389,13 @@ async function analyzeMedicalText(text) {
             html += `
                 <h3>Clinical Recommendations</h3>
                 <ol>
-                    ${results.recommendations.map(r => `<li>${r}</li>`).join('')}
+                    ${results.recommendations.clinical.map(r => `<li>${r}</li>`).join('')}
                 </ol>
-            `;
-        }
-        
-        if (results.follow_up) {
-            html += `
-                <h3>Follow-up Plan</h3>
-                <p>${results.follow_up.plan}</p>
-                <p>Next review: ${results.follow_up.next_review}</p>
+                
+                <h3>Lifestyle Recommendations</h3>
+                <ul>
+                    ${results.recommendations.lifestyle.map(r => `<li>${r}</li>`).join('')}
+                </ul>
             `;
         }
         
@@ -334,7 +406,7 @@ async function analyzeMedicalText(text) {
     function formatReferences(results) {
         let html = '<div class="result-section">';
         
-        if (results.references) {
+        if (results.references && results.references.length > 0) {
             html += `
                 <h3>Evidence-Based References</h3>
                 <ul>
@@ -347,75 +419,150 @@ async function analyzeMedicalText(text) {
                     `).join('')}
                 </ul>
             `;
-        }
-        
-        if (results.guidelines) {
-            html += `
-                <h3>Clinical Guidelines</h3>
-                <ul>
-                    ${results.guidelines.map(g => `<li>${g.name} (${g.organization}, ${g.year})</li>`).join('')}
-                </ul>
-            `;
+        } else {
+            html += `<p>No references available</p>`;
         }
         
         html += '</div>';
         return html;
     }
     
-    async function downloadReport() {
+    function downloadReport() {
         if (!analysisResults) {
             showError('No analysis results to download');
             return;
         }
         
         try {
-            // Show loading state for download
-            downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating Report...';
-            downloadBtn.disabled = true;
+            // Create HTML report
+            const reportContent = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Medical Analysis Report</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; padding: 2rem; }
+                        h1, h2, h3 { color: #2c3e50; }
+                        .section { margin-bottom: 2rem; }
+                        ul, ol { margin-left: 1.5rem; }
+                        .result-section { 
+                            margin-bottom: 2rem; 
+                            padding: 1.5rem; 
+                            background-color: #f8fafc; 
+                            border-radius: 8px; 
+                            border-left: 4px solid #00BCD4;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <h1>Medical Analysis Report</h1>
+                    <p>Generated on: ${new Date().toLocaleDateString()}</p>
+                    
+                    <div class="section">
+                        <h2>Summary</h2>
+                        ${document.getElementById('summaryContent').innerHTML}
+                    </div>
+                    
+                    <div class="section">
+                        <h2>Detailed Analysis</h2>
+                        ${document.getElementById('detailsContent').innerHTML}
+                    </div>
+                    
+                    <div class="section">
+                        <h2>Recommendations</h2>
+                        ${document.getElementById('recommendationsContent').innerHTML}
+                    </div>
+                    
+                    <div class="section">
+                        <h2>References</h2>
+                        ${document.getElementById('referencesContent').innerHTML}
+                    </div>
+                </body>
+                </html>
+            `;
             
-            // Request PDF generation from API
-            const response = await fetch(`${API_BASE_URL}/generate-report`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${API_KEY}`
-                },
-                body: JSON.stringify({
-                    analysis_id: analysisResults.analysis_id,
-                    format: 'pdf'
-                })
-            });
-            
-            if (!response.ok) {
-                throw new Error('Report generation failed');
-            }
-            
-            // Get the PDF blob
-            const blob = await response.blob();
+            // Create Blob
+            const blob = new Blob([reportContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
             
             // Create download link
-            const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `medical_report_${new Date().toISOString().split('T')[0]}.pdf`;
+            a.download = `medical_report_${new Date().toISOString().split('T')[0]}.html`;
             document.body.appendChild(a);
             a.click();
             
             // Clean up
-            window.URL.revokeObjectURL(url);
+            URL.revokeObjectURL(url);
             document.body.removeChild(a);
             
         } catch (error) {
             console.error('Download failed:', error);
             showError('Failed to generate report. Please try again.');
-        } finally {
-            downloadBtn.innerHTML = '<i class="fas fa-download"></i> Download Full Report';
-            downloadBtn.disabled = false;
         }
     }
     
     function showError(message) {
-        // Simple error notification - you could use a more sophisticated UI
-        alert(message);
+        // Create error notification
+        const errorEl = document.createElement('div');
+        errorEl.className = 'error-notification';
+        errorEl.innerHTML = `
+            <i class="fas fa-exclamation-circle"></i>
+            <span>${message}</span>
+            <i class="fas fa-times close-btn"></i>
+        `;
+        
+        document.body.appendChild(errorEl);
+        
+        // Add close functionality
+        errorEl.querySelector('.close-btn').addEventListener('click', () => {
+            errorEl.remove();
+        });
+        
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            if (document.body.contains(errorEl)) {
+                errorEl.remove();
+            }
+        }, 5000);
+    }
+    
+    // Add styles for error notification if not already present
+    if (!document.querySelector('style[data-error-notification]')) {
+        const style = document.createElement('style');
+        style.setAttribute('data-error-notification', 'true');
+        style.innerHTML = `
+            .error-notification {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background-color: #ffebee;
+                color: #b71c1c;
+                padding: 15px 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                z-index: 1000;
+                animation: slideIn 0.3s ease-out;
+                border-left: 4px solid #b71c1c;
+            }
+            
+            .error-notification i.fa-exclamation-circle {
+                font-size: 20px;
+            }
+            
+            .error-notification .close-btn {
+                cursor: pointer;
+                margin-left: 10px;
+            }
+            
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+        `;
+        document.head.appendChild(style);
     }
 });
