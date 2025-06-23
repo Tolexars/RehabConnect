@@ -16,11 +16,11 @@
             </div>
             <div class="nav__menu" id="nav-menu">
     <ul class="nav__list">
-        <li class="nav__item"><a href="#home" class="nav__link active-link" id="active">Home</a></li>
+        <li class="nav__item"><a href="index.html" onclick="saveAppState()" class="nav__link">Home</a></li>
         <li class="nav__item"><a href="professionals.html?category=All" onclick="saveAppState()" class="nav__link">Professionals</a></li>
         <li class="nav__item"><a href="marketplace.html" onclick="saveAppState()" class="nav__link">Marketplace</a></li>
         <li class="nav__item"><a href="blogs.html" onclick="saveAppState()" class="nav__link">Blogs</a></li>
-        <li class="nav__item"><a href="ai-assistant.html" onclick="saveAppState()" class="nav__link">AI Q</a></li>
+        
         <li class="nav__item" id="my-profile-nav-item" style="display: none;"><a href="users.html?id=${user.uid}" onclick="saveAppState()" class="nav__link">My Profile</a></li>
         
         <div class="auth-buttons">
@@ -39,8 +39,7 @@
     </header>
     <div class="container">
         <header>
-            <h1>Medical Document Analysis Tool</h1>
-            <p>Upload medical reports for comprehensive analysis and treatment planning</p>
+            
         </header>
 
         <div class="upload-section">
@@ -104,7 +103,7 @@
             <h2>Analysis Results</h2>
             <div class="results-tabs">
                 <button class="tab-btn active" data-tab="summary">Summary</button>
-                <button class="tab-btn" data-tab="details">Details</button>
+                <button class="tab-btn" data-tab="details">Progress</button>
                 <button class="tab-btn" data-tab="recommendations">Recommendations</button>
                 <button class="tab-btn" data-tab="references">References</button>
             </div>
