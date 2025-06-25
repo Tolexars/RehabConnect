@@ -4,42 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Medical Document Analysis Tool</title>
-    <link rel="stylesheet" href="assets/css/styles.css">
-    <link rel="stylesheet" href="assets/css/ai-assistant.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <header class="l-header">
-        <nav class="nav bd-grid">
-            <div>
-                <h2><span class="home__title-color">REHAB</span>VERVE</h2>
-            </div>
-            <div class="nav__menu" id="nav-menu">
-    <ul class="nav__list">
-        <li class="nav__item"><a href="index.html" onclick="saveAppState()" class="nav__link">Home</a></li>
-        <li class="nav__item"><a href="professionals.html?category=All" onclick="saveAppState()" class="nav__link">Professionals</a></li>
-        <li class="nav__item"><a href="marketplace.html" onclick="saveAppState()" class="nav__link">Marketplace</a></li>
-        <li class="nav__item"><a href="blogs.html" onclick="saveAppState()" class="nav__link">Blogs</a></li>
-        
-        <li class="nav__item" id="my-profile-nav-item" style="display: none;"><a href="users.html?id=${user.uid}" onclick="saveAppState()" class="nav__link">My Profile</a></li>
-        
-        <div class="auth-buttons">
-            <li class="nav_item"> <button id="login-btn" class="nav__link">Login</button></li>
-            
-        </div>
-    </ul>
-</div>
-<div class="nav__toggle" id="nav-toggle" style="display:none">
-    <i class='bx bx-menu'></i>
-</div>
-<div class="profile-image-nav" id="nav-toggle" style="display: none;">
-    <img src="" alt="" class="nav-profile-img">
-</div>
-        </nav>
-    </header>
     <div class="container">
         <header>
-            
+            <h1>Medical Document Analysis Tool</h1>
+            <p>Upload your medical documents and get AI-powered analysis, treatment plans, and progress reports</p>
         </header>
 
         <div class="upload-section">
@@ -54,7 +26,7 @@
         <div class="document-type-selector">
             <h3>Select Document Type:</h3>
             <div class="type-options">
-                <button class="type-btn active" data-type="medical">Medical Report</button>
+                <button class="type-btn" data-type="medical">Medical Report</button>
                 <button class="type-btn" data-type="psychology">Psychology Assessment</button>
                 <button class="type-btn" data-type="physio">Physiotherapy Assessment</button>
                 <button class="type-btn" data-type="occupational">Occupational Therapy</button>
@@ -64,32 +36,32 @@
         <div class="analysis-options">
             <h3>Analysis Options:</h3>
             <div class="option-grid">
-                <div class="option-card" data-option="diagnose">
+                <div class="option-card" data-option="diagnose" data-supported-types="medical psychology">
                     <i class="fas fa-stethoscope"></i>
                     <h4>Diagnose</h4>
                     <p>Generate potential diagnoses based on the document</p>
                 </div>
-                <div class="option-card" data-option="treatment">
+                <div class="option-card" data-option="treatment" data-supported-types="medical psychology physio occupational">
                     <i class="fas fa-heartbeat"></i>
                     <h4>Treatment Plan</h4>
                     <p>Develop a comprehensive treatment plan</p>
                 </div>
-                <div class="option-card" data-option="progress">
+                <div class="option-card" data-option="progress" data-supported-types="medical psychology physio occupational">
                     <i class="fas fa-chart-line"></i>
                     <h4>Progress Report</h4>
                     <p>Generate a professional progress report</p>
                 </div>
-                <div class="option-card" data-option="medication">
+                <div class="option-card" data-option="medication" data-supported-types="medical">
                     <i class="fas fa-pills"></i>
                     <h4>Medication Review</h4>
                     <p>Analyze and suggest medication adjustments</p>
                 </div>
-                <div class="option-card" data-option="timeline">
+                <div class="option-card" data-option="timeline" data-supported-types="medical physio occupational">
                     <i class="fas fa-calendar-alt"></i>
                     <h4>Recovery Timeline</h4>
                     <p>Estimate recovery phases and milestones</p>
                 </div>
-                <div class="option-card" data-option="referral">
+                <div class="option-card" data-option="referral" data-supported-types="medical psychology physio occupational">
                     <i class="fas fa-user-md"></i>
                     <h4>Referral Suggestions</h4>
                     <p>Recommend specialist referrals if needed</p>
@@ -99,7 +71,7 @@
 
         <button id="analyzeBtn" class="analyze-btn" disabled>Analyze Document</button>
 
-        <div class="results-section hidden" id="resultsSection">
+        <div class="results-section" id="resultsSection">
             <h2>Analysis Results</h2>
             <div class="results-tabs">
                 <button class="tab-btn active" data-tab="summary">Summary</button>
@@ -133,10 +105,6 @@
         </footer>
     </div>
 
-    <script src="https://www.gstatic.com/firebasejs/5.5.0/firebase.js"></script>
-    <script src="assets/js/configuration.js"></script>
-    <script src="assets/js/mainload.js"></script>
-    <script src="assets/js/auth.js"></script>
-    <script src="assets/js/ai-assistant.js"></script>
+    <script src="script.js"></script>
 </body>
-</html>
+        </html>
