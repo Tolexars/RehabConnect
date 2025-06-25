@@ -10,25 +10,40 @@ document.addEventListener('DOMContentLoaded', function() {
     const tabBtns = document.querySelectorAll('.tab-btn');
     const tabContents = document.querySelectorAll('.tab-content');
     const downloadBtn = document.getElementById('downloadReport');
-    const loadingSpinner = document.querySelector('.loading-spinner');
-    const summaryContent = document.getElementById('summaryContent');
+    const documentTypeSelector = document.querySelector('.document-type-selector');
+    const analysisOptions = document.querySelector('.analysis-options');
     
     // GitHub Configuration
-    const GITHUB_TOKEN = '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';
-    const GITHUB_API_URL = 'https://models.github.ai/inference/chat/completions';
-    const AI_MODEL = 'openai/gpt-4.1';  // Using the specified model
+    const GITHUB_API_URL = "https://models.github.ai/inference/chat/completions";
+    const AI_MODEL = "openai/gpt-4.1";
     
     // State variables
     let uploadedFile = null;
-    let documentType = 'medical';
+    let documentType = null;
     let selectedOptions = [];
     let analysisResults = null;
+    let githubToken = null;
+    
+    // Initialize Firebase (assuming configuration.js is included)
+    const database = firebase.database();
     
     // Initialize the app
-    init();
+    setupEventListeners();
+    fetchGitHubToken();
     
-    function init() {
-        setupEventListeners();
+    // Fetch GitHub token from Firebase
+    async function fetchGitHubToken() {
+        try {
+            const snapshot = await database.ref('token').once('value');
+            githubToken = snapshot.val();
+            
+            if (!githubToken) {
+                showError('GitHub token not found in database');
+            }
+        } catch (error) {
+            console.error('Error fetching token:', error);
+            showError('Failed to retrieve GitHub token');
+        }
     }
     
     function setupEventListeners() {
@@ -63,6 +78,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 typeBtns.forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 documentType = btn.dataset.type;
+                
+                // Show analysis options
+                analysisOptions.classList.add('visible');
+                
+                // Filter relevant options
+                filterOptionsByDocumentType();
+                
                 updateAnalyzeButtonState();
             });
         });
@@ -86,7 +108,13 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         // Analyze button
-        analyzeBtn.addEventListener('click', analyzeDocument);
+        analyzeBtn.addEventListener('click', () => {
+            if (!githubToken) {
+                showError('GitHub token not available. Please try again later.');
+                return;
+            }
+            analyzeDocument();
+        });
         
         // Tab switching
         tabBtns.forEach(btn => {
@@ -124,6 +152,10 @@ document.addEventListener('DOMContentLoaded', function() {
         
         uploadedFile = file;
         displayFileInfo(file);
+        
+        // Show document type selector
+        documentTypeSelector.classList.add('visible');
+        
         updateAnalyzeButtonState();
     }
     
@@ -144,15 +176,28 @@ document.addEventListener('DOMContentLoaded', function() {
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
     
+    function filterOptionsByDocumentType() {
+        optionCards.forEach(card => {
+            const supportedTypes = card.dataset.supportedTypes.split(' ');
+            if (supportedTypes.includes(documentType)) {
+                card.style.display = 'flex';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+    
     function updateAnalyzeButtonState() {
-        analyzeBtn.disabled = !(uploadedFile && selectedOptions.length > 0);
+        analyzeBtn.disabled = !(uploadedFile && documentType && selectedOptions.length > 0);
     }
     
     async function analyzeDocument() {
-        if (!uploadedFile || selectedOptions.length === 0) return;
+        if (!uploadedFile || !documentType || selectedOptions.length === 0) return;
         
         // Show loading state
-        resultsSection.classList.remove('hidden');
+        resultsSection.classList.add('visible');
+        const summaryContent = document.getElementById('summaryContent');
+        const loadingSpinner = document.querySelector('.loading-spinner');
         summaryContent.classList.add('hidden');
         loadingSpinner.classList.remove('hidden');
         analyzeBtn.disabled = true;
@@ -208,14 +253,14 @@ document.addEventListener('DOMContentLoaded', function() {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${GITHUB_TOKEN}`
+                'Authorization': `Bearer ${githubToken}`
             },
             body: JSON.stringify({
                 model: AI_MODEL,
                 messages: [
                     {
                         role: "system",
-                        content: "You are an experienced medical AI assistant. Analyze medical documents and provide professional assessments with evidence-based recommendations."
+                        content: "You are an experienced medical and rehab AI assistant. Analyze medical, psychiatry and therapy documents and provide professional assessments with evidence-based recommendations."
                     },
                     {
                         role: "user",
@@ -224,7 +269,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 ],
                 temperature: 1,
                 top_p: 1,
-                max_tokens: 4096
+                max_tokens: 7096
             })
         });
         
@@ -242,13 +287,13 @@ document.addEventListener('DOMContentLoaded', function() {
             medical: "medical report",
             psychology: "psychological assessment",
             physio: "physiotherapy evaluation",
-            occupational: "occupational therapy assessment"
+            occupational: "occupational therapy evaluation"
         };
         
         const analysisOptions = {
             diagnose: "potential diagnoses with confidence levels",
             treatment: "comprehensive treatment plan",
-            progress: "progress assessment report",
+            progress: "progress report",
             medication: "medication review and adjustments",
             timeline: "recovery timeline with milestones",
             referral: "specialist referral recommendations"
@@ -266,7 +311,7 @@ Format your response in JSON with these sections:
 - diagnosis: { primary: { name, code, confidence }, differential: [names] }
 - treatment_plan: { goals: [], interventions: [], timeline: string }
 - progress_assessment: { summary: string, metrics: [] }
-- recommendations: { clinical: [], lifestyle: [], specialists []}
+- recommendations: { clinical: [], lifestyle: [], professional []}
 - references: [ { title, authors, source, year } ]`;
     }
     
@@ -288,25 +333,7 @@ Format your response in JSON with these sections:
             
             // Fallback to plain text parsing
             return {
-                diagnosis: {
-                    primary: { name: "Unable to parse", code: "N/A", confidence: 0 },
-                    differential: []
-                },
-                treatment_plan: {
-                    goals: ["Response parsing failed"],
-                    interventions: [],
-                    timeline: "N/A"
-                },
-                progress_assessment: {
-                    summary: "Could not parse AI response",
-                    metrics: []
-                },
-                recommendations: {
-                    clinical: ["Check API response format"],
-                    specialists: [],
-                    lifestyle: []                                                          
-                },
-                references: []
+                error: "Could not parse AI response. Please try again."
             };
         } catch (e) {
             console.error('Failed to parse AI response:', e);
@@ -317,6 +344,13 @@ Format your response in JSON with these sections:
     }
     
     function displayResults(results) {
+        // Check if there was an error in the results
+        if (results.error) {
+            document.getElementById('summaryContent').innerHTML = 
+                `<div class="error-message">${results.error}</div>`;
+            return;
+        }
+        
         // Format and display results in each tab
         document.getElementById('summaryContent').innerHTML = formatSummary(results);
         document.getElementById('detailsContent').innerHTML = formatDetails(results);
@@ -396,6 +430,11 @@ Format your response in JSON with these sections:
                 <ul>
                     ${results.recommendations.lifestyle.map(r => `<li>${r}</li>`).join('')}
                 </ul>
+                
+                <h3>Professional Referrals</h3>
+                <ul>
+                    ${results.recommendations.professional.map(r => `<li>${r}</li>`).join('')}
+                </ul>
             `;
         }
         
@@ -428,8 +467,8 @@ Format your response in JSON with these sections:
     }
     
     function downloadReport() {
-        if (!analysisResults) {
-            showError('No analysis results to download');
+        if (!analysisResults || analysisResults.error) {
+            showError('No valid analysis results to download');
             return;
         }
         
@@ -441,16 +480,23 @@ Format your response in JSON with these sections:
                 <head>
                     <title>Medical Analysis Report</title>
                     <style>
-                        body { font-family: Arial, sans-serif; line-height: 1.6; padding: 2rem; }
+                        body { font-family: Arial, sans-serif; line-height: 1.6; padding: 30px; }
                         h1, h2, h3 { color: #2c3e50; }
-                        .section { margin-bottom: 2rem; }
-                        ul, ol { margin-left: 1.5rem; }
+                        .section { margin-bottom: 30px; }
+                        ul, ol { margin-left: 25px; }
                         .result-section { 
-                            margin-bottom: 2rem; 
-                            padding: 1.5rem; 
+                            margin-bottom: 25px; 
+                            padding: 20px; 
                             background-color: #f8fafc; 
                             border-radius: 8px; 
                             border-left: 4px solid #00BCD4;
+                        }
+                        .error-message {
+                            color: #e53935;
+                            padding: 15px;
+                            border: 1px solid #ffcdd2;
+                            border-radius: 8px;
+                            background-color: #ffebee;
                         }
                     </style>
                 </head>
@@ -525,44 +571,5 @@ Format your response in JSON with these sections:
                 errorEl.remove();
             }
         }, 5000);
-    }
-    
-    // Add styles for error notification if not already present
-    if (!document.querySelector('style[data-error-notification]')) {
-        const style = document.createElement('style');
-        style.setAttribute('data-error-notification', 'true');
-        style.innerHTML = `
-            .error-notification {
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background-color: #ffebee;
-                color: #b71c1c;
-                padding: 15px 20px;
-                border-radius: 8px;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                z-index: 1000;
-                animation: slideIn 0.3s ease-out;
-                border-left: 4px solid #b71c1c;
-            }
-            
-            .error-notification i.fa-exclamation-circle {
-                font-size: 20px;
-            }
-            
-            .error-notification .close-btn {
-                cursor: pointer;
-                margin-left: 10px;
-            }
-            
-            @keyframes slideIn {
-                from { transform: translateX(100%); opacity: 0; }
-                to { transform: translateX(0); opacity: 1; }
-            }
-        `;
-        document.head.appendChild(style);
     }
 });
