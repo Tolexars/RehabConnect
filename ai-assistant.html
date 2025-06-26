@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="assets/css/styles.css">
     <link rel="stylesheet" href="assets/css/ai-assistant.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-app-pub-4782711076571062/7170414515" crossorigin="anonymous"></script>
 </head>
 <body>
     <header class="l-header">
@@ -37,13 +38,18 @@
 </div>
         </nav>
     </header>
+        
     <div class="container">
-       
+        <header>
+            
+            <p>Upload your medical documents and get AI-powered analysis, treatment plans, and recommendations</p>
+        </header>
+
         <div class="upload-section">
             <div class="drop-zone" id="dropZone">
                 <i class="fas fa-cloud-upload-alt"></i>
                 <p>Drag & drop your document here or click to browse</p>
-                <input type="file" id="fileInput" accept=".pdf,.doc,.docx,.txt">
+                <input type="file" id="fileInput" accept=".pdf,.doc,.docx,.txt" display="none">
             </div>
             <div class="file-info" id="fileInfo"></div>
         </div>
@@ -53,8 +59,10 @@
             <div class="type-options">
                 <button class="type-btn" data-type="medical">Medical Report</button>
                 <button class="type-btn" data-type="psychology">Psychology Assessment</button>
-                <button class="type-btn" data-type="physio">Physiotherapy Assessment</button>
                 <button class="type-btn" data-type="occupational">Occupational Therapy</button>
+                <button class="type-btn" data-type="physio">Physiotherapy</button>
+                <button class="type-btn" data-type="speech">Speech Therapy</button>
+                
             </div>
         </div>
 
@@ -135,5 +143,6 @@
     <script src="assets/js/mainload.js"></script>
     <script src="assets/js/auth.js"></script>
     <script src="assets/js/ai-assistant.js"></script>
+    <script src="assets/js/ads22.js"></script>
 </body>
-        </html>
+</html>

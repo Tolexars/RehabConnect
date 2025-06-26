@@ -7,6 +7,7 @@
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="assets/css/styles.css">
     <link rel="stylesheet" href="assets/css/styleload.css">
+    
     <!-- Add this to your index.html head section -->
 
 </head>
@@ -22,7 +23,7 @@
         <li class="nav__item"><a href="professionals.html?category=All" onclick="saveAppState()" class="nav__link">Professionals</a></li>
         <li class="nav__item"><a href="marketplace.html" onclick="saveAppState()" class="nav__link">Marketplace</a></li>
         <li class="nav__item"><a href="blogs.html" onclick="saveAppState()" class="nav__link">Blogs</a></li>
-        <li class="nav__item"><a href="ai-assistant.html" onclick="saveAppState()" class="nav__link">AI Q</a></li>
+        
         <li class="nav__item" id="my-profile-nav-item" style="display: none;"><a href="users.html?id=${user.uid}" onclick="saveAppState()" class="nav__link">My Profile</a></li>
         
         <div class="auth-buttons">
@@ -234,6 +235,13 @@
 </div>
 
 
+    <!-- Add this just before the closing </body> tag in index.html -->
+<a href="ai-assistant.html" class="floating-ai-button">
+  <i class='bx bx-bot'></i>
+  <span class="ai-button-text">AI Assistant</span>
+</a>
+
+
 <footer class="modern-footer">
     <div class="footer-grid">
         <!-- Column 1: Brand Info -->
@@ -290,6 +298,13 @@
     </div>
 </footer>
 
+
+<script src="https://unpkg.com/docx@latest/build/index.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
     <!-- Corrected script order -->
 <script src="https://www.gstatic.com/firebasejs/5.5.0/firebase.js"></script>
 <script src="assets/js/configuration.js"></script>
@@ -297,5 +312,6 @@
 
 <script src="assets/js/auth.js"></script>
 <script src="assets/js/main.js"></script>
+<script src="assets/js/ads.js"></script>
 </body>
 </html>
