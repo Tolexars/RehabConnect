@@ -370,6 +370,7 @@ function handleAuthenticatedState(user) {
     const profileImageNav = document.querySelector('.profile-image-nav');
     const navToggle = document.getElementById('nav-toggle');
     const myProfileNavItem = document.getElementById('my-profile-nav-item');
+    const myMobileProfileNavItem = document.getElementById('mobile-profile-nav');
     const navMenu = document.getElementById('nav-menu');
 
     if (loginBtn) loginBtn.style.display = 'none';

@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let analysisResults = null;
     let githubToken = null;
     
-    // Initialize Firebase (assuming configuration.js is included)
+    // Initialize Firebase
     const database = firebase.database();
     
     // Initialize the app
@@ -194,11 +194,15 @@ document.addEventListener('DOMContentLoaded', function() {
     async function analyzeDocument() {
         if (!uploadedFile || !documentType || selectedOptions.length === 0) return;
         
+        // Get DOM elements
+        const loadingSpinner = document.querySelector('.loading-spinner');
+        const resultsContent = document.querySelector('.results-content');
+        const summaryContent = document.getElementById('summaryContent');
+        
         // Show loading state
         resultsSection.classList.add('visible');
-        const summaryContent = document.getElementById('summaryContent');
-        const loadingSpinner = document.querySelector('.loading-spinner');
         summaryContent.classList.add('hidden');
+        if (resultsContent) resultsContent.classList.add('hidden');
         loadingSpinner.classList.remove('hidden');
         analyzeBtn.disabled = true;
         analyzeBtn.textContent = 'Analyzing...';
@@ -214,15 +218,12 @@ document.addEventListener('DOMContentLoaded', function() {
             // Display results
             displayResults(analysisResults);
             
-            // Hide loading spinner
-            loadingSpinner.classList.add('hidden');
-            summaryContent.classList.remove('hidden');
-            
         } catch (error) {
             console.error('Analysis failed:', error);
-            showError('Analysis failed. Please try again later.');
-            loadingSpinner.classList.add('hidden');
+            showError('Analysis failed: ' + error.message);
         } finally {
+            // Always hide spinner and reset button
+            loadingSpinner.classList.add('hidden');
             analyzeBtn.disabled = false;
             analyzeBtn.textContent = 'Analyze Document';
         }
@@ -249,37 +250,50 @@ document.addEventListener('DOMContentLoaded', function() {
         // Prepare the prompt based on selected options
         const prompt = createMedicalPrompt(content, documentType, selectedOptions);
         
-        const response = await fetch(GITHUB_API_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${githubToken}`
-            },
-            body: JSON.stringify({
-                model: AI_MODEL,
-                messages: [
-                    {
-                        role: "system",
-                        content: "You are an experienced medical and rehab AI assistant. Analyze medical, psychiatry and therapy documents and provide professional assessments with evidence-based recommendations."
-                    },
-                    {
-                        role: "user",
-                        content: prompt
-                    }
-                ],
-                temperature: 1,
-                top_p: 1,
-                max_tokens: 7096
-            })
-        });
-        
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(`API Error: ${errorData.error?.message || 'Unknown error'}`);
+        try {
+            const response = await fetch(GITHUB_API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${githubToken}`
+                },
+                body: JSON.stringify({
+                    model: AI_MODEL,
+                    messages: [
+                        {
+                            role: "system",
+                            content: "You are an experienced medical and rehab AI assistant. Analyze medical, psychiatry and therapy documents and provide professional assessments with evidence-based recommendations."
+                        },
+                        {
+                            role: "user",
+                            content: prompt
+                        }
+                    ],
+                    temperature: 1,
+                    top_p: 1,
+                    max_tokens: 7096
+                })
+            });
+
+            // First get response as text to handle non-JSON responses
+            const responseText = await response.text();
+            
+            if (!response.ok) {
+                // Handle specific error cases
+                if (response.status === 401) {
+                    throw new Error("Unauthorized: Invalid GitHub token");
+                }
+                throw new Error(responseText || 'API request failed');
+            }
+
+            // Parse JSON if response is OK
+            const data = JSON.parse(responseText);
+            return parseAIResponse(data.choices[0].message.content);
+            
+        } catch (error) {
+            console.error('API request failed:', error);
+            throw error;
         }
-        
-        const data = await response.json();
-        return parseAIResponse(data.choices[0].message.content);
     }
     
     function createMedicalPrompt(content, docType, options) {
@@ -311,7 +325,7 @@ Format your response in JSON with these sections:
 - diagnosis: { primary: { name, code, confidence }, differential: [names] }
 - treatment_plan: { goals: [], interventions: [], timeline: string }
 - progress_assessment: { summary: string, metrics: [] }
-- recommendations: { clinical: [], lifestyle: [], professional []}
+- recommendations: { clinical: [], lifestyle: [], professional: [] }
 - references: [ { title, authors, source, year } ]`;
     }
     
@@ -344,6 +358,14 @@ Format your response in JSON with these sections:
     }
     
     function displayResults(results) {
+        // Get DOM elements
+        const loadingSpinner = document.querySelector('.loading-spinner');
+        const resultsContent = document.querySelector('.results-content');
+        
+        // Hide spinner and show content
+        loadingSpinner.classList.add('hidden');
+        if (resultsContent) resultsContent.classList.remove('hidden');
+        
         // Check if there was an error in the results
         if (results.error) {
             document.getElementById('summaryContent').innerHTML = 
