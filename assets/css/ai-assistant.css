@@ -6,7 +6,7 @@
     --secondary: #4CAF50;
     --secondary-dark: #388E3C;
     --accent: #FF5722;
-    --background: #F5F7FA;
+    --background: #e9ecef;
     --surface: #FFFFFF;
     --text-primary: #263238;
     --text-secondary: #546E7A;
@@ -445,7 +445,7 @@ header p {
 
 /* Download Button */
 .download-btn {
-    display: inline-flex;
+    display: flex;
     align-items: center;
     justify-content: center;
     gap: 10px;
@@ -588,4 +588,16 @@ footer {
         padding: 10px 15px;
         font-size: 14px;
     }
-                                 }
+}
+.loading-spinner {
+  display: none;
+  /* Your spinner styles */
+}
+
+.loading-spinner:not(.hidden) {
+  display: flex;
+}
+
+.results-content.hidden {
+  display: none;
+}
