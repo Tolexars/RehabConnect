@@ -1220,6 +1220,9 @@ button{
 
 
 /* ads.css */
+/* ads.css - Styles for advertisement containers and fallback content */
+
+/* Ad Container Styles */
 .ad-container {
     margin: 40px auto;
     max-width: 1200px;
@@ -1239,12 +1242,15 @@ button{
 }
 
 .ad-content {
-    min-height: 100px;
     display: flex;
     align-items: center;
     justify-content: center;
+    min-height: 250px; /* Minimum height */
+    min-width: 300px; /* Minimum width */
+    background-color: #f0f0f0; /* Fallback color */
 }
 
+/* Fallback content styles */
 .ad-fallback {
     padding: 20px;
     background: #e9f7fe;
@@ -1256,11 +1262,13 @@ button{
 .ad-fallback h3 {
     color: #00BCD4;
     margin-top: 0;
+    font-size: 1.2rem;
 }
 
 .ad-fallback p {
     margin: 10px 0 20px;
     color: #495057;
+    font-size: 0.9rem;
 }
 
 .ad-fallback a {
@@ -1272,6 +1280,7 @@ button{
     text-decoration: none;
     font-weight: 600;
     transition: background 0.3s;
+    font-size: 0.9rem;
 }
 
 .ad-fallback a:hover {
@@ -1286,7 +1295,24 @@ button{
     }
     
     .ad-content {
-        min-height: 50px;
+        min-height: 200px;
+        min-width: 250px;
+    }
+    
+    .ad-fallback {
+        padding: 15px;
+    }
+    
+    .ad-fallback h3 {
+        font-size: 1.1rem;
+    }
+    
+    .ad-fallback p {
+        font-size: 0.85rem;
+    }
+    
+    .ad-fallback a {
+        padding: 8px 16px;
     }
 }
 
@@ -1345,5 +1371,9 @@ button{
   }
 }
 
-
+.ad-content {
+    min-width: 300px;  /* Standard ad width */
+    min-height: 250px; /* Standard ad height */
+    background: #f0f0f0; /* Fallback color */
+}
 
