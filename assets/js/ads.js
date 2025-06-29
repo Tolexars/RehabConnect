@@ -1,121 +1,245 @@
-// ads.js
+// ads.js - Combined AdMob and AdSense implementation with improved error handling
+
 document.addEventListener('DOMContentLoaded', function() {
-    // Create ad containers
     createAdContainers();
     
-    // Load Google AdSense script
-    loadAdSense();
+    if (isMobileDevice()) {
+        initializeAdMob(); // AdMob for mobile
+    } else {
+        loadAdSense(); // AdSense for desktop
+    }
     
-    // Initialize ads after a delay to ensure page has rendered
-    setTimeout(initializeAds, 2000);
+    // Initialize after containers are ready
+    setTimeout(initializeAds, 500);
 });
 
+// ========================
+//  Core Functions
+// ========================
+
+function isMobileDevice() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+
 function createAdContainers() {
-    // Create ad containers at strategic locations
     const adLocations = [
         {id: 'ad-middle', after: 'featured-professionals', className: 'ad-container ad-middle'},
         {id: 'ad-bottom', after: 'blog-section', className: 'ad-container ad-bottom'}
     ];
     
     adLocations.forEach(location => {
-        const adContainer = document.createElement('div');
-        adContainer.id = location.id;
-        adContainer.className = location.className;
-        adContainer.innerHTML = `
-            <div class="ad-label">Advertisement</div>
-            <div class="ad-content" id="${location.id}-content"></div>
-        `;
-        
-        const targetElement = document.getElementById(location.after);
-        if (targetElement && targetElement.parentNode) {
-            targetElement.parentNode.insertBefore(adContainer, targetElement.nextSibling);
+        if (!document.getElementById(location.id)) {
+            const adContainer = document.createElement('div');
+            adContainer.id = location.id;
+            adContainer.className = location.className;
+            adContainer.innerHTML = `
+                <div class="ad-label">Advertisement</div>
+                <div class="ad-content" id="${location.id}-content"></div>
+            `;
+            
+            const targetElement = document.getElementById(location.after);
+            if (targetElement && targetElement.parentNode) {
+                targetElement.parentNode.insertBefore(adContainer, targetElement.nextSibling);
+            }
         }
     });
 }
 
-function loadAdSense() {
-    // Only load if not already loaded
-    if (window.adsbygoogle && !window.adsInitialized) {
+// ========================
+//  Ad Network Initialization
+// ========================
+
+function initializeAdMob() {
+    // Assumes Firebase is already initialized in configuration.js
+    if (typeof firebase === 'undefined' || !firebase.ads) {
+        console.error('Firebase AdMob not available, falling back to AdSense');
+        loadAdSense();
         return;
     }
     
-    // Create script element
+    firebase.ads()
+        .initialize()
+        .then(() => {
+            console.log('AdMob initialized');
+            window.admobInitialized = true;
+        })
+        .catch(error => {
+            console.error('AdMob init failed:', error);
+            loadAdSense(); // Fallback to AdSense
+        });
+}
+
+function loadAdSense() {
+    if (window.adsbygoogle && window.adsInitialized) return;
+    
     const script = document.createElement('script');
-    script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js';
+    script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4782711076571062';
     script.async = true;
     script.onload = () => {
         window.adsInitialized = true;
-        console.log('AdSense script loaded successfully');
+        console.log('AdSense loaded');
     };
     script.onerror = () => {
-        console.error('Failed to load AdSense script');
+        console.error('AdSense failed, showing fallback');
+        showFallbackAds();
     };
-    
     document.head.appendChild(script);
 }
 
+// ========================
+//  Ad Loading Logic (Improved)
+// ========================
+
 function initializeAds() {
-    // Initialize ads if AdSense is available
-    if (window.adsbygoogle) {
-        try {
-            // Create ad units
-            createAdUnit('ad-middle-content', 'ca-app-pub-4782711076571062/1918087836', 'index ads');
-            createAdUnit('ad-bottom-content', 'your-ad-client-id', 'your-ad-slot-id-bottom');
-            
-            console.log('Ads initialized successfully');
-        } catch (error) {
-            console.error('Error initializing ads:', error);
-        }
+    if (isMobileDevice() && window.admobInitialized) {
+        loadAdMobAds();
+    } else if (window.adsbygoogle) {
+        loadAdSenseAds();
     } else {
-        console.warn('AdSense not available, showing fallback content');
         showFallbackAds();
     }
 }
 
-function createAdUnit(containerId, adClient, adSlot) {
+function loadAdMobAds() {
+    const adUnits = [
+        { id: 'ad-middle-content', adUnitId: 'YOUR_ADMOB_AD_UNIT_ID_1' },
+        { id: 'ad-bottom-content', adUnitId: 'YOUR_ADMOB_AD_UNIT_ID_2' }
+    ];
+
+    adUnits.forEach(unit => {
+        const container = document.getElementById(unit.id);
+        
+        // Only attempt to load if container is visible and has dimensions
+        if (container && container.offsetWidth > 0 && container.offsetHeight > 0) {
+            createAdMobAd(unit.id, unit.adUnitId);
+        } else {
+            console.warn(`Container ${unit.id} not ready, retrying...`);
+            setTimeout(() => createAdMobAd(unit.id, unit.adUnitId), 500);
+        }
+    });
+}
+
+function createAdMobAd(containerId, adUnitId) {
     const container = document.getElementById(containerId);
-    if (!container) return;
+    if (!container) {
+        console.warn(`Container ${containerId} not found`);
+        return;
+    }
     
+    // If container has no dimensions, show fallback
+    if (container.offsetWidth === 0 || container.offsetHeight === 0) {
+        console.warn(`Container ${containerId} has no dimensions`);
+        showFallbackContent(containerId);
+        return;
+    }
+    
+    container.innerHTML = '';
+    
+    const ad = new firebase.ads.BannerAd({
+        adUnitId: adUnitId,
+        size: firebase.ads.BannerSize.ADAPTIVE_BANNER,
+        container: container
+    });
+
+    ad.load()
+        .then(() => ad.show())
+        .catch(error => {
+            console.error(`AdMob failed for ${containerId}:`, error);
+            showFallbackContent(containerId);
+        });
+}
+
+function loadAdSenseAds() {
+    const adUnits = [
+        { id: 'ad-middle-content', adClient: 'ca-pub-4782711076571062', adSlot: '1234567890' },
+        { id: 'ad-bottom-content', adClient: 'ca-pub-4782711076571062', adSlot: '9876543210' }
+    ];
+
+    adUnits.forEach(unit => {
+        const container = document.getElementById(unit.id);
+        
+        // Only attempt to load if container is visible and has dimensions
+        if (container && container.offsetWidth > 0 && container.offsetHeight > 0) {
+            createAdSenseAd(unit.id, unit.adClient, unit.adSlot);
+        } else {
+            console.warn(`Container ${unit.id} not ready, retrying...`);
+            setTimeout(() => createAdSenseAd(unit.id, unit.adClient, unit.adSlot), 500);
+        }
+    });
+}
+
+function createAdSenseAd(containerId, adClient, adSlot) {
+    const container = document.getElementById(containerId);
+    if (!container) {
+        console.warn(`Container ${containerId} not found`);
+        return;
+    }
+    
+    // If container has no dimensions, show fallback
+    if (container.offsetWidth === 0 || container.offsetHeight === 0) {
+        console.warn(`Container ${containerId} has no dimensions`);
+        showFallbackContent(containerId);
+        return;
+    }
+    
+    // Clear container
+    container.innerHTML = '';
+    
+    // Create AdSense element with improved styling
     const adElement = document.createElement('ins');
     adElement.className = 'adsbygoogle';
     adElement.style.display = 'block';
+    adElement.style.width = '100%';
+    adElement.style.height = '100%';
+    adElement.style.minHeight = '250px';
     adElement.dataset.adClient = adClient;
     adElement.dataset.adSlot = adSlot;
     adElement.dataset.adFormat = 'auto';
-    adElement.dataset.fullWidthResponsive = true;
+    adElement.dataset.fullWidthResponsive = 'true';
     
     container.appendChild(adElement);
     
-    // Push the ad to AdSense
-    (adsbygoogle = window.adsbygoogle || []).push({});
+    try {
+        // Push to AdSense queue
+        (window.adsbygoogle = window.adsbygoogle || []).push({});
+        console.log(`AdSense ad created in ${containerId}`);
+    } catch (e) {
+        console.error(`AdSense failed for ${containerId}:`, e);
+        showFallbackContent(containerId);
+    }
 }
 
+// ========================
+//  Fallback System (Improved)
+// ========================
+
 function showFallbackAds() {
-    // Fallback content if ads don't load
-    const fallbackContent = [
-        
-        {
-            id: 'ad-middle-content',
-            content: `<div class="ad-fallback">
-                <h3>Expert Consultation</h3>
-                <p>Connect with certified healthcare professionals</p>
-                <a href="professionals.html">Find a Specialist</a>
+    const fallbacks = {
+        'ad-middle-content': `
+            <div class="ad-fallback">
+                <h3>Professional Help</h3>
+                <p>Connect with certified specialists</p>
+                <a href="/professionals">Browse Professionals</a>
+            </div>`,
+        'ad-bottom-content': `
+            <div class="ad-fallback">
+                <h3>Health Resources</h3>
+                <p>Discover our free tools and guides</p>
+                <a href="/resources">Explore Resources</a>
             </div>`
-        },
-        {
-            id: 'ad-bottom-content',
-            content: `<div class="ad-fallback">
-                <h3>Health Insights</h3>
-                <p>Read our latest articles on rehabilitation</p>
-                <a href="blogs.html">Explore Blogs</a>
-            </div>`
-        }
-    ];
-    
-    fallbackContent.forEach(ad => {
-        const container = document.getElementById(ad.id);
-        if (container) {
-            container.innerHTML = ad.content;
-        }
+    };
+
+    Object.entries(fallbacks).forEach(([id, content]) => {
+        showFallbackContent(id, content);
     });
+}
+
+function showFallbackContent(containerId, content = null) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    container.innerHTML = content || `
+        <div class="ad-fallback">
+            <p>Advertisement placeholder</p>
+        </div>`;
 }
