@@ -4,14 +4,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const fileInput = document.getElementById('fileInput');
     const fileInfo = document.getElementById('fileInfo');
     const typeBtns = document.querySelectorAll('.type-btn');
-    const optionCards = document.querySelectorAll('.option-card');
     const analyzeBtn = document.getElementById('analyzeBtn');
-    const resultsSection = document.getElementById('resultsSection');
-    const tabBtns = document.querySelectorAll('.tab-btn');
-    const tabContents = document.querySelectorAll('.tab-content');
     const downloadBtn = document.getElementById('downloadReport');
+    const saveBtn = document.getElementById('saveToProfile');
     const documentTypeSelector = document.querySelector('.document-type-selector');
-    const analysisOptions = document.querySelector('.analysis-options');
+    const analysisRequest = document.querySelector('.analysis-request');
+    const analysisTextarea = document.getElementById('analysisRequest');
+    const resultsContent = document.getElementById('resultsContent');
+    const suggestionBtns = document.querySelectorAll('.suggestion-btn');
     
     // GitHub Configuration
     const GITHUB_API_URL = "https://models.github.ai/inference/chat/completions";
@@ -20,12 +20,15 @@ document.addEventListener('DOMContentLoaded', function() {
     // State variables
     let uploadedFile = null;
     let documentType = null;
-    let selectedOptions = [];
     let analysisResults = null;
     let githubToken = null;
+    let currentUser = null;
     
     // Initialize Firebase
     const database = firebase.database();
+    firebase.auth().onAuthStateChanged(user => {
+        currentUser = user;
+    });
     
     // Initialize the app
     setupEventListeners();
@@ -79,31 +82,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 btn.classList.add('active');
                 documentType = btn.dataset.type;
                 
-                // Show analysis options
-                analysisOptions.classList.add('visible');
-                
-                // Filter relevant options
-                filterOptionsByDocumentType();
+                // Show analysis request
+                analysisRequest.classList.add('visible');
                 
                 updateAnalyzeButtonState();
             });
         });
         
-        // Analysis option selection
-        optionCards.forEach(card => {
-            card.addEventListener('click', () => {
-                card.classList.toggle('selected');
-                const option = card.dataset.option;
-                
-                if (card.classList.contains('selected')) {
-                    if (!selectedOptions.includes(option)) {
-                        selectedOptions.push(option);
-                    }
-                } else {
-                    selectedOptions = selectedOptions.filter(opt => opt !== option);
-                }
-                
-                updateAnalyzeButtonState();
+        // Suggestion buttons
+        suggestionBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const requestText = btn.dataset.request;
+                analysisTextarea.value += (analysisTextarea.value ? "\n" : "") + requestText;
             });
         });
         
@@ -116,21 +106,14 @@ document.addEventListener('DOMContentLoaded', function() {
             analyzeDocument();
         });
         
-        // Tab switching
-        tabBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const tabId = btn.dataset.tab;
-                
-                tabBtns.forEach(b => b.classList.remove('active'));
-                tabContents.forEach(c => c.classList.remove('active'));
-                
-                btn.classList.add('active');
-                document.getElementById(`${tabId}Tab`).classList.add('active');
-            });
-        });
+        // Download report as PDF
+        downloadBtn.addEventListener('click', downloadPDF);
         
-        // Download report
-        downloadBtn.addEventListener('click', downloadReport);
+        // Save to profile
+        saveBtn.addEventListener('click', saveToProfile);
+        
+        // Enable analyze button when text changes
+        analysisTextarea.addEventListener('input', updateAnalyzeButtonState);
     }
     
     function handleFileUpload(file) {
@@ -176,34 +159,29 @@ document.addEventListener('DOMContentLoaded', function() {
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
     
-    function filterOptionsByDocumentType() {
-        optionCards.forEach(card => {
-            const supportedTypes = card.dataset.supportedTypes.split(' ');
-            if (supportedTypes.includes(documentType)) {
-                card.style.display = 'flex';
-            } else {
-                card.style.display = 'none';
-            }
-        });
-    }
-    
     function updateAnalyzeButtonState() {
-        analyzeBtn.disabled = !(uploadedFile && documentType && selectedOptions.length > 0);
+        analyzeBtn.disabled = !(
+            uploadedFile && 
+            documentType && 
+            analysisTextarea.value.trim().length > 0
+        );
     }
     
     async function analyzeDocument() {
-        if (!uploadedFile || !documentType || selectedOptions.length === 0) return;
+        if (!uploadedFile || !documentType || !analysisTextarea.value) return;
         
         // Get DOM elements
-        const loadingSpinner = document.querySelector('.loading-spinner');
-        const resultsContent = document.querySelector('.results-content');
-        const summaryContent = document.getElementById('summaryContent');
+        const loadingSpinner = document.createElement('div');
+        loadingSpinner.className = 'loading-spinner';
+        loadingSpinner.innerHTML = `
+            <div class="spinner"></div>
+            <p>Analyzing document...</p>
+        `;
         
         // Show loading state
-        resultsSection.classList.add('visible');
-        summaryContent.classList.add('hidden');
-        if (resultsContent) resultsContent.classList.add('hidden');
-        loadingSpinner.classList.remove('hidden');
+        document.getElementById('resultsSection').classList.add('visible');
+        resultsContent.innerHTML = '';
+        resultsContent.appendChild(loadingSpinner);
         analyzeBtn.disabled = true;
         analyzeBtn.textContent = 'Analyzing...';
         
@@ -212,7 +190,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const fileContent = await readFileAsText(uploadedFile);
             
             // Analyze content using GitHub AI API
-            const analysisResponse = await analyzeWithGitHubAI(fileContent);
+            const analysisResponse = await analyzeWithGitHubAI(fileContent, analysisTextarea.value);
             analysisResults = analysisResponse;
             
             // Display results
@@ -222,8 +200,7 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Analysis failed:', error);
             showError('Analysis failed: ' + error.message);
         } finally {
-            // Always hide spinner and reset button
-            loadingSpinner.classList.add('hidden');
+            // Reset button
             analyzeBtn.disabled = false;
             analyzeBtn.textContent = 'Analyze Document';
         }
@@ -246,9 +223,9 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    async function analyzeWithGitHubAI(content) {
-        // Prepare the prompt based on selected options
-        const prompt = createMedicalPrompt(content, documentType, selectedOptions);
+    async function analyzeWithGitHubAI(content, userRequest) {
+        // Prepare the prompt based on user request
+        const prompt = createMedicalPrompt(content, documentType, userRequest);
         
         try {
             const response = await fetch(GITHUB_API_URL, {
@@ -262,16 +239,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     messages: [
                         {
                             role: "system",
-                            content: "You are an experienced medical and rehab AI assistant. Analyze medical, psychiatry and therapy documents and provide professional assessments with evidence-based recommendations."
+                            content: "You are an experienced medical and rehab AI assistant. Analyze medical, psychiatry and therapy documents and provide professional assessments with evidence-based recommendations. Format your response with proper headings but without markdown syntax (no ** or ##). Use clear section headings in plain text."
                         },
                         {
                             role: "user",
                             content: prompt
                         }
                     ],
-                    temperature: 1,
-                    top_p: 1,
-                    max_tokens: 7096
+                    temperature: 0.7,
+                    top_p: 0.9,
+                    max_tokens: 4000
                 })
             });
 
@@ -279,16 +256,12 @@ document.addEventListener('DOMContentLoaded', function() {
             const responseText = await response.text();
             
             if (!response.ok) {
-                // Handle specific error cases
-                if (response.status === 401) {
-                    throw new Error("Unauthorized: Invalid GitHub token");
-                }
                 throw new Error(responseText || 'API request failed');
             }
 
             // Parse JSON if response is OK
             const data = JSON.parse(responseText);
-            return parseAIResponse(data.choices[0].message.content);
+            return data.choices[0].message.content;
             
         } catch (error) {
             console.error('API request failed:', error);
@@ -296,277 +269,152 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    function createMedicalPrompt(content, docType, options) {
+    function createMedicalPrompt(content, docType, userRequest) {
         const documentTypes = {
             medical: "medical report",
             psychology: "psychological assessment",
             physio: "physiotherapy evaluation",
-            occupational: "occupational therapy evaluation"
+            occupational: "occupational therapy evaluation",
+            speech: "speech therapy assessment"
         };
-        
-        const analysisOptions = {
-            diagnose: "potential diagnoses with confidence levels",
-            treatment: "comprehensive treatment plan",
-            progress: "progress report",
-            medication: "medication review and adjustments",
-            timeline: "recovery timeline with milestones",
-            referral: "specialist referral recommendations"
-        };
-        
-        const selectedAnalysis = options.map(opt => analysisOptions[opt]).join(', ');
         
         return `Analyze the following ${documentTypes[docType]} and provide:
-1. ${selectedAnalysis}
+- A comprehensive analysis based on the user's specific request
+- Clear, professional formatting with section headings (but without markdown syntax)
+- Evidence-based recommendations
+- Key findings highlighted
+
+User's request: ${userRequest}
 
 Document content:
 ${content.substring(0, 8000)}  [truncated if too long]
 
-Format your response in JSON with these sections:
-- diagnosis: { primary: { name, code, confidence }, differential: [names] }
-- treatment_plan: { goals: [], interventions: [], timeline: string }
-- progress_assessment: { summary: string, metrics: [] }
-- recommendations: { clinical: [], lifestyle: [], professional: [] }
-- references: [ { title, authors, source, year } ]`;
-    }
-    
-    function parseAIResponse(responseText) {
-        try {
-            // Try to parse as JSON
-            const jsonMatch = responseText.match(/```json([\s\S]*?)```/);
-            if (jsonMatch) {
-                return JSON.parse(jsonMatch[1]);
-            }
-            
-            // Fallback: look for JSON without code block
-            const jsonStart = responseText.indexOf('{');
-            const jsonEnd = responseText.lastIndexOf('}');
-            if (jsonStart !== -1 && jsonEnd !== -1) {
-                const jsonString = responseText.substring(jsonStart, jsonEnd + 1);
-                return JSON.parse(jsonString);
-            }
-            
-            // Fallback to plain text parsing
-            return {
-                error: "Could not parse AI response. Please try again."
-            };
-        } catch (e) {
-            console.error('Failed to parse AI response:', e);
-            return {
-                error: 'Failed to parse analysis results'
-            };
-        }
+Structure your response as follows:
+1. Summary of Key Findings
+2. Detailed Analysis
+3. Professional Recommendations
+4. Next Steps
+
+Avoid using markdown syntax like **bold** or ## headings. Use plain text headings with capitalization instead.`;
     }
     
     function displayResults(results) {
-        // Get DOM elements
-        const loadingSpinner = document.querySelector('.loading-spinner');
-        const resultsContent = document.querySelector('.results-content');
+        // Clean up the results by removing markdown syntax
+        const cleanResults = results
+            .replace(/\*\*/g, '') // Remove bold markers
+            .replace(/\#\#\s?/g, '') // Remove heading markers
+            .replace(/-\s/g, '• ') // Convert dashes to bullets
+            .replace(/\n\s*\n/g, '\n\n'); // Normalize line breaks
         
-        // Hide spinner and show content
-        loadingSpinner.classList.add('hidden');
-        if (resultsContent) resultsContent.classList.remove('hidden');
-        
-        // Check if there was an error in the results
-        if (results.error) {
-            document.getElementById('summaryContent').innerHTML = 
-                `<div class="error-message">${results.error}</div>`;
-            return;
-        }
-        
-        // Format and display results in each tab
-        document.getElementById('summaryContent').innerHTML = formatSummary(results);
-        document.getElementById('detailsContent').innerHTML = formatDetails(results);
-        document.getElementById('recommendationsContent').innerHTML = formatRecommendations(results);
-        document.getElementById('referencesContent').innerHTML = formatReferences(results);
+        // Format with proper HTML
+        resultsContent.innerHTML = `
+            <div class="result-section">
+                ${formatResultsWithHTML(cleanResults)}
+            </div>
+        `;
     }
     
-    function formatSummary(results) {
-        let html = '<div class="result-section">';
+    function formatResultsWithHTML(text) {
+        // Split into sections
+        const sections = text.split(/\d+\.\s+/).filter(s => s.trim());
+        let html = '';
         
-        if (results.diagnosis) {
-            html += `
-                <h3>Potential Diagnoses</h3>
-                <p><strong>Primary:</strong> ${results.diagnosis.primary.name} (${results.diagnosis.primary.code}) - ${results.diagnosis.primary.confidence}% confidence</p>`;
+        sections.forEach(section => {
+            // Extract title and content
+            const titleEnd = section.indexOf('\n');
+            const title = section.substring(0, titleEnd).trim();
+            const content = section.substring(titleEnd).trim();
             
-            if (results.diagnosis.differential && results.diagnosis.differential.length > 0) {
-                html += `
-                    <h4>Differential Diagnosis</h4>
-                    <ul>
-                        ${results.diagnosis.differential.map(d => `<li>${d}</li>`).join('')}
-                    </ul>
-                `;
+            if (title && content) {
+                html += `<h3>${title}</h3>`;
+                html += `<p>${content.replace(/\n/g, '<br>')}</p>`;
+            } else {
+                html += `<p>${section.replace(/\n/g, '<br>')}</p>`;
             }
-        }
+        });
         
-        if (results.treatment_plan) {
-            html += `
-                <h3>Treatment Plan</h3>
-                <h4>Goals</h4>
-                <ul>
-                    ${results.treatment_plan.goals.map(g => `<li>${g}</li>`).join('')}
-                </ul>
-                
-                <h4>Interventions</h4>
-                <ol>
-                    ${results.treatment_plan.interventions.map(i => `<li>${i}</li>`).join('')}
-                </ol>
-                
-                <p><strong>Timeline:</strong> ${results.treatment_plan.timeline}</p>
-            `;
-        }
-        
-        html += '</div>';
         return html;
     }
     
-    function formatDetails(results) {
-        let html = '<div class="result-section">';
-        
-        if (results.progress_assessment) {
-            html += `
-                <h3>Progress Assessment</h3>
-                <p>${results.progress_assessment.summary}</p>
-                
-                <h4>Key Metrics</h4>
-                <ul>
-                    ${results.progress_assessment.metrics.map(m => `<li>${m}</li>`).join('')}
-                </ul>
-            `;
-        }
-        
-        html += '</div>';
-        return html;
-    }
-    
-    function formatRecommendations(results) {
-        let html = '<div class="result-section">';
-        
-        if (results.recommendations) {
-            html += `
-                <h3>Clinical Recommendations</h3>
-                <ol>
-                    ${results.recommendations.clinical.map(r => `<li>${r}</li>`).join('')}
-                </ol>
-                
-                <h3>Lifestyle Recommendations</h3>
-                <ul>
-                    ${results.recommendations.lifestyle.map(r => `<li>${r}</li>`).join('')}
-                </ul>
-                
-                <h3>Professional Referrals</h3>
-                <ul>
-                    ${results.recommendations.professional.map(r => `<li>${r}</li>`).join('')}
-                </ul>
-            `;
-        }
-        
-        html += '</div>';
-        return html;
-    }
-    
-    function formatReferences(results) {
-        let html = '<div class="result-section">';
-        
-        if (results.references && results.references.length > 0) {
-            html += `
-                <h3>Evidence-Based References</h3>
-                <ul>
-                    ${results.references.map(ref => `
-                        <li>
-                            <strong>${ref.title}</strong><br>
-                            ${ref.authors}<br>
-                            <em>${ref.source}</em>, ${ref.year}
-                        </li>
-                    `).join('')}
-                </ul>
-            `;
-        } else {
-            html += `<p>No references available</p>`;
-        }
-        
-        html += '</div>';
-        return html;
-    }
-    
-    function downloadReport() {
-        if (!analysisResults || analysisResults.error) {
-            showError('No valid analysis results to download');
+    async function downloadPDF() {
+        if (!analysisResults) {
+            showError('No analysis results to download');
             return;
         }
         
         try {
-            // Create HTML report
-            const reportContent = `
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <title>Medical Analysis Report</title>
-                    <style>
-                        body { font-family: Arial, sans-serif; line-height: 1.6; padding: 30px; }
-                        h1, h2, h3 { color: #2c3e50; }
-                        .section { margin-bottom: 30px; }
-                        ul, ol { margin-left: 25px; }
-                        .result-section { 
-                            margin-bottom: 25px; 
-                            padding: 20px; 
-                            background-color: #f8fafc; 
-                            border-radius: 8px; 
-                            border-left: 4px solid #00BCD4;
-                        }
-                        .error-message {
-                            color: #e53935;
-                            padding: 15px;
-                            border: 1px solid #ffcdd2;
-                            border-radius: 8px;
-                            background-color: #ffebee;
-                        }
-                    </style>
-                </head>
-                <body>
-                    <h1>Medical Analysis Report</h1>
-                    <p>Generated on: ${new Date().toLocaleDateString()}</p>
-                    
-                    <div class="section">
-                        <h2>Summary</h2>
-                        ${document.getElementById('summaryContent').innerHTML}
-                    </div>
-                    
-                    <div class="section">
-                        <h2>Detailed Analysis</h2>
-                        ${document.getElementById('detailsContent').innerHTML}
-                    </div>
-                    
-                    <div class="section">
-                        <h2>Recommendations</h2>
-                        ${document.getElementById('recommendationsContent').innerHTML}
-                    </div>
-                    
-                    <div class="section">
-                        <h2>References</h2>
-                        ${document.getElementById('referencesContent').innerHTML}
-                    </div>
-                </body>
-                </html>
-            `;
+            // Use html2canvas to capture the resultsContent
+            const canvas = await html2canvas(resultsContent);
+            const imgData = canvas.toDataURL('image/png');
             
-            // Create Blob
-            const blob = new Blob([reportContent], { type: 'text/html' });
-            const url = URL.createObjectURL(blob);
+            // Calculate PDF dimensions
+            const imgWidth = 210; // A4 width in mm
+            const pageHeight = 297; // A4 height in mm
+            const imgHeight = canvas.height * imgWidth / canvas.width;
             
-            // Create download link
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `medical_report_${new Date().toISOString().split('T')[0]}.html`;
-            document.body.appendChild(a);
-            a.click();
+            // Create PDF
+            const pdf = new jspdf.jsPDF('p', 'mm', 'a4');
             
-            // Clean up
-            URL.revokeObjectURL(url);
-            document.body.removeChild(a);
+            // Add first page
+            pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+            
+            // Add additional pages if needed
+            let heightLeft = imgHeight;
+            let position = 0;
+            const imgWidthMM = imgWidth;
+            const imgHeightMM = imgHeight;
+            
+            while (heightLeft >= pageHeight) {
+                position = heightLeft - pageHeight;
+                pdf.addPage();
+                pdf.addImage(imgData, 'PNG', 0, -position, imgWidthMM, imgHeightMM);
+                heightLeft -= pageHeight;
+            }
+            
+            // Download
+            pdf.save(`medical_analysis_${new Date().toISOString().split('T')[0]}.pdf`);
             
         } catch (error) {
-            console.error('Download failed:', error);
-            showError('Failed to generate report. Please try again.');
+            console.error('PDF generation failed:', error);
+            showError('Failed to generate PDF. Please try again.');
+        }
+    }
+    
+    function saveToProfile() {
+        if (!currentUser) {
+            showError('You must be logged in to save analysis');
+            return;
+        }
+        
+        if (!analysisResults) {
+            showError('No analysis to save');
+            return;
+        }
+        
+        try {
+            const userId = currentUser.uid;
+            const analysisRef = database.ref(`users/${userId}/ais`);
+            
+            const analysisData = {
+                documentType: documentType,
+                request: analysisTextarea.value,
+                results: analysisResults,
+                fileName: uploadedFile.name,
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            };
+            
+            analysisRef.push(analysisData)
+                .then(() => {
+                    showSuccess('Analysis saved to your profile!');
+                })
+                .catch(error => {
+                    console.error('Save failed:', error);
+                    showError('Failed to save analysis. Please try again.');
+                });
+                
+        } catch (error) {
+            console.error('Save error:', error);
+            showError('Error saving analysis');
         }
     }
     
@@ -591,6 +439,28 @@ Format your response in JSON with these sections:
         setTimeout(() => {
             if (document.body.contains(errorEl)) {
                 errorEl.remove();
+            }
+        }, 5000);
+    }
+    
+    function showSuccess(message) {
+        const successEl = document.createElement('div');
+        successEl.className = 'success-notification';
+        successEl.innerHTML = `
+            <i class="fas fa-check-circle"></i>
+            <span>${message}</span>
+            <i class="fas fa-times close-btn"></i>
+        `;
+        
+        document.body.appendChild(successEl);
+        
+        successEl.querySelector('.close-btn').addEventListener('click', () => {
+            successEl.remove();
+        });
+        
+        setTimeout(() => {
+            if (document.body.contains(successEl)) {
+                successEl.remove();
             }
         }, 5000);
     }
