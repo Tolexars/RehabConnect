@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saved Analyses - REHABVERVE</title>
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <link rel="stylesheet" href="assets/css/ai-assistant.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <header class="l-header">
+        <nav class="nav bd-grid">
+            <div>
+                <h2><span class="home__title-color">REHAB</span>VERVE</h2>
+            </div>
+            <div class="nav__menu" id="nav-menu">
+                <ul class="nav__list">
+                    <li class="nav__item"><a href="index.html" class="nav__link">Home</a></li>
+                    <li class="nav__item"><a href="professionals.html?category=All" class="nav__link">Professionals</a></li>
+                    <li class="nav__item"><a href="marketplace.html" class="nav__link">Marketplace</a></li>
+                    <li class="nav__item"><a href="blogs.html" class="nav__link">Blogs</a></li>
+                    <li class="nav__item" id="my-profile-nav-item" style="display: none;"><a href="users.html?id=${user.uid}" class="nav__link">My Profile</a></li>
+                    <div class="auth-buttons">
+                        <li class="nav_item"> <button id="login-btn" class="nav__link">Login</button></li>
+                    </div>
+                </ul>
+            </div>
+            <div class="nav__toggle" id="nav-toggle" style="display:none">
+                <i class='bx bx-menu'></i>
+            </div>
+            <div class="profile-image-nav" id="nav-toggle" style="display: none;">
+                <img src="" alt="" class="nav-profile-img">
+            </div>
+        </nav>
+    </header>
+    
+    <div class="container">
+        <header>
+            <h1>Saved Analyses</h1>
+            <p>Your previously saved document analyses</p>
+        </header>
+        
+        <div class="saved-analyses-container" id="savedAnalyses">
+            <div class="loading-spinner">
+                <div class="spinner"></div>
+                <p>Loading your saved analyses...</p>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://www.gstatic.com/firebasejs/5.5.0/firebase.js"></script>
+    <script src="assets/js/configuration.js"></script>
+    <script src="assets/js/mainload.js"></script>
+    <script src="assets/js/auth.js"></script>
+    <script src="assets/js/saved.js"></script>
+</body>
+</html>

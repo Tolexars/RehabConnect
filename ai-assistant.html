@@ -11,6 +11,7 @@
 </head>
 <body>
     <header class="l-header">
+        <!-- Navigation remains the same -->
         <nav class="nav bd-grid">
             <div>
                 <h2><span class="home__title-color">REHAB</span>VERVE</h2>
@@ -42,7 +43,7 @@
     <div class="container">
         <header>
             
-            <p>Upload your medical documents and get AI-powered analysis, treatment plans, and recommendations</p>
+            <p>Upload your medical documents and describe what you need analyzed</p>
         </header>
 
         <div class="upload-section">
@@ -62,42 +63,25 @@
                 <button class="type-btn" data-type="occupational">Occupational Therapy</button>
                 <button class="type-btn" data-type="physio">Physiotherapy</button>
                 <button class="type-btn" data-type="speech">Speech Therapy</button>
-                
             </div>
         </div>
 
-        <div class="analysis-options">
-            <h3>Analysis Options:</h3>
-            <div class="option-grid">
-                <div class="option-card" data-option="diagnose" data-supported-types="medical psychology">
-                    <i class="fas fa-stethoscope"></i>
-                    <h4>Diagnose</h4>
-                    <p>Generate potential diagnoses based on the document</p>
-                </div>
-                <div class="option-card" data-option="treatment" data-supported-types="medical psychology physio occupational">
-                    <i class="fas fa-heartbeat"></i>
-                    <h4>Treatment Plan</h4>
-                    <p>Develop a comprehensive treatment plan</p>
-                </div>
-                <div class="option-card" data-option="progress" data-supported-types="medical psychology physio occupational">
-                    <i class="fas fa-chart-line"></i>
-                    <h4>Progress Report</h4>
-                    <p>Generate a professional progress report</p>
-                </div>
-                <div class="option-card" data-option="medication" data-supported-types="medical">
-                    <i class="fas fa-pills"></i>
-                    <h4>Medication Review</h4>
-                    <p>Analyze and suggest medication adjustments</p>
-                </div>
-                <div class="option-card" data-option="timeline" data-supported-types="medical physio occupational">
-                    <i class="fas fa-calendar-alt"></i>
-                    <h4>Recovery Timeline</h4>
-                    <p>Estimate recovery phases and milestones</p>
-                </div>
-                <div class="option-card" data-option="referral" data-supported-types="medical psychology physio occupational">
-                    <i class="fas fa-user-md"></i>
-                    <h4>Referral Suggestions</h4>
-                    <p>Recommend specialist referrals if needed</p>
+        <div class="analysis-request">
+            <h3>What would you like to know?</h3>
+            <p>Describe the specific insights or analysis you need from this document.</p>
+            <textarea id="analysisRequest" rows="4" placeholder="e.g., Please summarize the key findings, suggest a treatment plan, and highlight any critical issues..."></textarea>
+            
+            <div class="suggestions-container">
+                <h4>Quick Suggestions:</h4>
+                <div class="suggestions-scroll">
+                    <button class="suggestion-btn" data-request="Summarize the key findings and recommendations">Summary</button>
+                    <button class="suggestion-btn" data-request="Provide a detailed diagnosis and differential diagnosis">Diagnosis</button>
+                    <button class="suggestion-btn" data-request="Create a comprehensive treatment plan with goals and interventions">Treatment Plan</button>
+                    <button class="suggestion-btn" data-request="Suggest medication adjustments and alternatives">Medication Review</button>
+                    <button class="suggestion-btn" data-request="Outline a recovery timeline with milestones">Recovery Timeline</button>
+                    <button class="suggestion-btn" data-request="Recommend specialist referrals if needed">Referrals</button>
+                    <button class="suggestion-btn" data-request="Highlight any critical issues that require immediate attention">Critical Issues</button>
+                    <button class="suggestion-btn" data-request="Provide evidence-based references for recommendations">References</button>
                 </div>
             </div>
         </div>
@@ -106,38 +90,74 @@
 
         <div class="results-section" id="resultsSection">
             <h2>Analysis Results</h2>
-            <div class="results-tabs">
-                <button class="tab-btn active" data-tab="summary">Summary</button>
-                <button class="tab-btn" data-tab="details">Progress</button>
-                <button class="tab-btn" data-tab="recommendations">Recommendations</button>
-                <button class="tab-btn" data-tab="references">References</button>
+            <div class="results-content" id="resultsContent"></div>
+            <div class="results-actions">
+                <button class="download-btn" id="downloadReport">
+                    <i class="fas fa-download"></i> Download as PDF
+                </button>
+                <button class="save-btn" id="saveToProfile">
+                    <i class="fas fa-save"></i> Save to Profile
+                </button>
             </div>
-            <div class="tab-content active" id="summaryTab">
-                <div class="loading-spinner">
-                    <div class="spinner"></div>
-                    <p>Analyzing document...</p>
-                </div>
-                <div class="results-content hidden" id="summaryContent"></div>
-            </div>
-            <div class="tab-content" id="detailsTab">
-                <div class="results-content" id="detailsContent"></div>
-            </div>
-            <div class="tab-content" id="recommendationsTab">
-                <div class="results-content" id="recommendationsContent"></div>
-            </div>
-            <div class="tab-content" id="referencesTab">
-                <div class="results-content" id="referencesContent"></div>
-            </div>
-            <button class="download-btn" id="downloadReport">
-                <i class="fas fa-download"></i> Download Full Report
-            </button>
         </div>
+        
+        <!-- Add this to your HTML -->
+<div id="auth-modal" class="modal">
+    <div class="modal-content">
+        <span class="modal-close">&times;</span>
+        <div class="auth-tabs">
+            <div class="auth-tab active" data-form="login">Login</div>
+            <div class="auth-tab" data-form="register">Register</div>
+        </div>
+
+        <!-- Login Form -->
+        <form id="login-form" class="auth-form active">
+            <div class="error-message" id="login-error"></div>
+            <div class="form-group">
+                <input type="email" id="login-email" placeholder="Email" required>
+            </div>
+            <div class="form-group">
+                <input type="password" id="login-password" placeholder="Password" required>
+            </div>
+            <button type="submit">Login</button>
+        </form>
+
+        <!-- Registration Form -->
+        <form id="register-form" class="auth-form">
+            <div class="error-message" id="register-error"></div>
+            <div class="form-group">
+                <input type="name" id="register-name" placeholder="Name" required>
+            </div>
+            <div class="form-group">
+                <input type="email" id="register-email" placeholder="Email" required>
+            </div>
+            <div class="form-group">
+                <input type="password" id="register-password" 
+                       placeholder="Password (min. 6 characters)" required>
+            </div>
+            <button type="submit">Create Account</button>
+        </form>
+    </div>
+</div>
+
+
+    <!-- Add this just before the closing </body> tag in index.html -->
+<a href="saved.html" class="floating-ai-button">
+  <i class='bx bx-bot'></i>
+  <span class="ai-button-text">Saved Data</span>
+</a>
+
+
 
         <footer>
             <p>This tool is for professional use only. Always verify AI-generated medical advice.</p>
         </footer>
     </div>
 
+    <!-- Include jsPDF library for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
     <script src="https://www.gstatic.com/firebasejs/5.5.0/firebase.js"></script>
     <script src="assets/js/configuration.js"></script>
     <script src="assets/js/mainload.js"></script>
