@@ -106,8 +106,8 @@ document.addEventListener('DOMContentLoaded', function() {
             analyzeDocument();
         });
         
-        // Download report as PDF
-        downloadBtn.addEventListener('click', downloadPDF);
+        // Download report as Word document
+        downloadBtn.addEventListener('click', downloadDOCX);
         
         // Save to profile
         saveBtn.addEventListener('click', saveToProfile);
@@ -336,49 +336,152 @@ Avoid using markdown syntax like **bold** or ## headings. Use plain text heading
         return html;
     }
     
-    async function downloadPDF() {
+   
+    async function downloadDOCX() {
         if (!analysisResults) {
             showError('No analysis results to download');
             return;
         }
-        
+
         try {
-            // Use html2canvas to capture the resultsContent
-            const canvas = await html2canvas(resultsContent);
-            const imgData = canvas.toDataURL('image/png');
+            // Show loading state
+            const originalText = downloadBtn.innerHTML;
+            downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating Document...';
+            downloadBtn.disabled = true;
+
+            // Create document structure
+            const doc = new docx.Document({
+                styles: {
+                    paragraphStyles: [{
+                        id: "normal",
+                        name: "Normal",
+                        run: {
+                            size: 24, // 12pt
+                            font: "Calibri"
+                        },
+                        paragraph: {
+                            spacing: {
+                                line: 276, // 1.15 line spacing
+                            }
+                        }
+                    }],
+                },
+                sections: [{
+                    properties: {},
+                    children: await formatAnalysisForDOCX(analysisResults)
+                }]
+            });
+
+            // Generate the DOCX file
+            const blob = await docx.Packer.toBlob(doc);
             
-            // Calculate PDF dimensions
-            const imgWidth = 210; // A4 width in mm
-            const pageHeight = 297; // A4 height in mm
-            const imgHeight = canvas.height * imgWidth / canvas.width;
+            // Create download link
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Medical_Analysis_${documentType}_${new Date().toISOString().slice(0,10)}.docx`;
+            document.body.appendChild(a);
+            a.click();
             
-            // Create PDF
-            const pdf = new jspdf.jsPDF('p', 'mm', 'a4');
-            
-            // Add first page
-            pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
-            
-            // Add additional pages if needed
-            let heightLeft = imgHeight;
-            let position = 0;
-            const imgWidthMM = imgWidth;
-            const imgHeightMM = imgHeight;
-            
-            while (heightLeft >= pageHeight) {
-                position = heightLeft - pageHeight;
-                pdf.addPage();
-                pdf.addImage(imgData, 'PNG', 0, -position, imgWidthMM, imgHeightMM);
-                heightLeft -= pageHeight;
-            }
-            
-            // Download
-            pdf.save(`medical_analysis_${new Date().toISOString().split('T')[0]}.pdf`);
-            
+            // Clean up
+            setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                downloadBtn.innerHTML = originalText;
+                downloadBtn.disabled = false;
+            }, 100);
+
         } catch (error) {
-            console.error('PDF generation failed:', error);
-            showError('Failed to generate PDF. Please try again.');
+            console.error('DOCX generation failed:', error);
+            showError('Failed to generate Word document: ' + error.message);
+            downloadBtn.innerHTML = 'Download Report';
+            downloadBtn.disabled = false;
         }
     }
+
+    /**
+     * Formats analysis results for Word document
+     */
+    async function formatAnalysisForDOCX(text) {
+        const paragraphs = [];
+        
+        // Add title
+        paragraphs.push(
+            new docx.Paragraph({
+                text: "Medical Document Analysis Report",
+                heading: docx.HeadingLevel.HEADING_1,
+                spacing: { after: 400 },
+                border: { bottom: { color: "2F5496", size: 8, space: 4 } }
+            })
+        );
+
+        // Add metadata
+        if (uploadedFile && documentType) {
+            paragraphs.push(
+                new docx.Paragraph({
+                    text: `Document Type: ${documentType.charAt(0).toUpperCase() + documentType.slice(1)} Analysis`,
+                    heading: docx.HeadingLevel.HEADING_3,
+                    spacing: { after: 200 }
+                }),
+                new docx.Paragraph({
+                    text: `Original File: ${uploadedFile.name}`,
+                    italics: true,
+                    spacing: { after: 300 }
+                })
+            );
+        }
+
+        // Process analysis sections
+        const sections = text.split(/\n\s*\n/).filter(s => s.trim());
+        
+        sections.forEach(section => {
+            // Check for numbered headings (e.g., "1. Summary")
+            if (/^\d+\.\s+.+/.test(section)) {
+                const headingText = section.replace(/^\d+\.\s+/, '');
+                paragraphs.push(
+                    new docx.Paragraph({
+                        text: headingText,
+                        heading: docx.HeadingLevel.HEADING_2,
+                        spacing: { before: 400, after: 200 }
+                    })
+                );
+            } else {
+                // Regular paragraph with proper formatting
+                const content = section.replace(/\*\*/g, '')
+                                      .replace(/\n/g, ' ')
+                                      .replace(/\s+/g, ' ')
+                                      .trim();
+                
+                if (content) {
+                    paragraphs.push(
+                        new docx.Paragraph({
+                            children: [new docx.TextRun({
+                                text: content,
+                                size: 24
+                            })],
+                            spacing: { after: 150 },
+                            indent: { left: 200 }
+                        })
+                    );
+                }
+            }
+        });
+
+        // Add footer with timestamp
+        paragraphs.push(
+            new docx.Paragraph({
+                text: `Report generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}`,
+                alignment: docx.AlignmentType.RIGHT,
+                size: 20,
+                color: "666666",
+                spacing: { before: 600 }
+            })
+        );
+
+        return paragraphs;
+    }
+
+   
     
     function saveToProfile() {
         if (!currentUser) {
