@@ -37,9 +37,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
+            // Convert to array and sort by timestamp (newest first)
+            const analysesArray = Object.entries(analyses)
+                .map(([key, value]) => ({ id: key, ...value }))
+                .sort((a, b) => b.timestamp - a.timestamp);
+            
             let html = '<div class="saved-list">';
-            Object.keys(analyses).forEach(key => {
-                const analysis = analyses[key];
+            analysesArray.forEach(analysis => {
                 const date = new Date(analysis.timestamp);
                 const formattedDate = date.toLocaleDateString('en-US', {
                     year: 'numeric',
@@ -55,7 +59,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     : analysis.request;
                 
                 html += `
-                    <div class="saved-item" data-id="${key}">
+                    <div class="saved-item" data-id="${analysis.id}">
                         <div class="item-header">
                             <h3>${analysis.fileName}</h3>
                             <span class="date">${formattedDate}</span>
@@ -65,7 +69,9 @@ document.addEventListener('DOMContentLoaded', function() {
                             <p class="request">${shortRequest}</p>
                         </div>
                         <div class="item-actions">
-                            <button class="view-btn">View Analysis</button>
+                            <button class="download-btn" data-id="${analysis.id}">
+                                <i class="fas fa-download"></i> Download Analysis
+                            </button>
                         </div>
                     </div>
                 `;
@@ -74,12 +80,11 @@ document.addEventListener('DOMContentLoaded', function() {
             
             savedAnalysesContainer.innerHTML = html;
             
-            // Add event listeners to view buttons
-            document.querySelectorAll('.view-btn').forEach(btn => {
+            // Add event listeners to download buttons
+            document.querySelectorAll('.download-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
-                    const item = this.closest('.saved-item');
-                    const analysisId = item.dataset.id;
-                    window.location.href = `result.html?id=${analysisId}`;
+                    const analysisId = this.dataset.id;
+                    downloadAnalysis(analysisId);
                 });
             });
         }, (error) => {
@@ -87,6 +92,74 @@ document.addEventListener('DOMContentLoaded', function() {
             loadingSpinner.style.display = 'none';
             showError('Failed to load saved analyses. Please try again.');
         });
+    }
+    
+    function downloadAnalysis(analysisId) {
+        if (!currentUser) return;
+        
+        const analysisRef = database.ref(`users/${currentUser.uid}/ais/${analysisId}`);
+        analysisRef.once('value').then(snapshot => {
+            const analysis = snapshot.val();
+            if (analysis && analysis.results) {
+                generateWordDocument(analysis);
+            } else {
+                alert('Analysis data not found');
+            }
+        }).catch(error => {
+            console.error('Error fetching analysis:', error);
+            alert('Failed to download analysis');
+        });
+    }
+    
+    function generateWordDocument(analysis) {
+        // Create a simple Word document structure
+        const content = `
+            <html xmlns:o='urn:schemas-microsoft-com:office:office' 
+                  xmlns:w='urn:schemas-microsoft-com:office:word' 
+                  xmlns='http://www.w3.org/TR/REC-html40'>
+            <head>
+                <meta charset="utf-8">
+                <title>${analysis.fileName} Analysis</title>
+                <style>
+                    body { font-family: Arial, sans-serif; margin: 40px; }
+                    h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+                    h2 { color: #3498db; }
+                    .meta { margin-bottom: 20px; }
+                    .content { line-height: 1.6; }
+                </style>
+            </head>
+            <body>
+                <h1>Document Analysis: ${analysis.fileName}</h1>
+                <div class="meta">
+                    <p><strong>Document Type:</strong> ${analysis.documentType}</p>
+                    <p><strong>Analysis Date:</strong> ${new Date(analysis.timestamp).toLocaleString()}</p>
+                    <p><strong>Original Request:</strong> ${analysis.request}</p>
+                </div>
+                <div class="content">
+                    ${analysis.results.replace(/\n/g, '<br>')}
+                </div>
+            </body>
+            </html>
+        `;
+        
+        // Create a Blob with Word document format
+        const blob = new Blob([content], {type: 'application/msword'});
+        
+        // Create download link
+        const link = document.createElement('a');
+        const fileName = `${analysis.fileName.replace(/\.[^/.]+$/, "")}_analysis.doc`;
+        link.href = URL.createObjectURL(blob);
+        link.download = fileName;
+        
+        // Trigger download
+        document.body.appendChild(link);
+        link.click();
+        
+        // Clean up
+        setTimeout(() => {
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
+        }, 100);
     }
     
     function showError(message) {
