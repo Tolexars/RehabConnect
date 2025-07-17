@@ -1,92 +1,103 @@
-// configure.js - Complete Fixed Implementation
-const CACHE_EXPIRATION = 1800000; // 30 minutes
+// mainload.js - Updated for Centers Directory 
+
+const CACHE_EXPIRATION = 1800000; // 30 minutes 
 
 // App state management
 const appState = {
-    professionals: null,
-    professionals22: null, 
-    products: null,
-    blogPosts: null,
-    slider: {
-        slides: [],
-        currentSlide: 0,
-        isAutoSliding: true
-    },
-    lastUpdated: null,
-    isLoggedIn: false
-};
+    professionals: null,
+    professionals22: null, 
+    products: null,
+    centers: null, // Replaced blogPosts with centers
+    courses: null,
+    tools: null,
+    slider: {
+        slides: [],
+        currentSlide: 0,
+        isAutoSliding: true
+    },
+    lastUpdated: null,
+    isLoggedIn: false
+}; 
 
 // DOM elements
 const profilesContainer = document.querySelector('.profiles-container');
 const productsContainer = document.querySelector('.products-container');
-const blogsContainer = document.querySelector('.blogs-container');
+const centersContainer = document.querySelector('.centers-container'); // Changed from blogs-container
 const profilesContainer22 = document.querySelector('.profiles-container22');
 const sliderContainer = document.getElementById('slider-container');
 const sliderDotsContainer = document.querySelector('.slider-dots');
+const coursesContainer = document.querySelector('.courses-container');
+const toolsContainer = document.querySelector('.tools-container'); 
 
 // Database references
 const professionalsRef = database.ref().child('professionals');
 const productsRef = database.ref().child('products');
-const blogPostsRef = database.ref().child('blogPosts');
+const centersRef = database.ref().child('centers'); // Changed from blogPostsRef
 const sliderRef = database.ref('slider');
+const coursesRef = database.ref('cert');
+const toolsRef = database.ref('equip'); 
 
 // Function to show loading animation
 function showLoading(sectionId) {
-    const section = document.getElementById(sectionId);
-    if (section) {
-        const loadingOverlay = section.querySelector('.loading-overlay');
-        const contentContainer = section.querySelector(
-            sectionId === 'featured-professionals' ? '.profiles-container' :
-            sectionId === 'featured-products' ? '.products-container' :
-            sectionId === 'featured-professionals22' ? '.profiles-container22' :
-            sectionId === 'blog-section' ? '.blogs-container' : null
-        );
-        if (loadingOverlay) loadingOverlay.style.display = 'flex';
-        if (contentContainer) contentContainer.classList.add('loading');
-    }
-}
+    const section = document.getElementById(sectionId);
+    if (section) {
+        const loadingOverlay = section.querySelector('.loading-overlay');
+        const contentContainer = section.querySelector(
+            sectionId === 'featured-professionals' ? '.profiles-container' :
+            sectionId === 'featured-products' ? '.products-container' :
+            sectionId === 'featured-professionals22' ? '.profiles-container22' :
+            sectionId === 'centers-section' ? '.centers-container' : // Changed from blog-section
+            sectionId === 'courses-section' ? '.courses-container' :
+            sectionId === 'tools-section' ? '.tools-container' : null
+        );
+        if (loadingOverlay) loadingOverlay.style.display = 'flex';
+        if (contentContainer) contentContainer.classList.add('loading');
+    }
+} 
 
 // Function to hide loading animation
 function hideLoading(sectionId) {
-    const section = document.getElementById(sectionId);
-    if (section) {
-        const loadingOverlay = section.querySelector('.loading-overlay');
-        const contentContainer = section.querySelector(
-            sectionId === 'featured-professionals' ? '.profiles-container' :
-            sectionId === 'featured-products' ? '.products-container' :
-            sectionId === 'featured-professionals22' ? '.profiles-container22' :
-            sectionId === 'blog-section' ? '.blogs-container' : null
-        );
-        if (loadingOverlay) loadingOverlay.style.display = 'none';
-        if (contentContainer) contentContainer.classList.remove('loading');
-    }
-}
+    const section = document.getElementById(sectionId);
+    if (section) {
+        const loadingOverlay = section.querySelector('.loading-overlay');
+        const contentContainer = section.querySelector(
+            sectionId === 'featured-professionals' ? '.profiles-container' :
+            sectionId === 'featured-products' ? '.products-container' :
+            sectionId === 'featured-professionals22' ? '.profiles-container22' :
+            sectionId === 'centers-section' ? '.centers-container' : // Changed from blog-section
+            sectionId === 'courses-section' ? '.courses-container' :
+            sectionId === 'tools-section' ? '.tools-container' : null
+        );
+        if (loadingOverlay) loadingOverlay.style.display = 'none';
+        if (contentContainer) contentContainer.classList.remove('loading');
+    }
+} 
 
 // State management functions
 function saveAppState() {
-    try {
-        appState.lastUpdated = Date.now();
-        appState.isLoggedIn = !!firebase.auth().currentUser;
-        sessionStorage.setItem('appState', JSON.stringify(appState));
-    } catch (e) {
-        console.error("Error saving app state:", e);
-    }
-}
+    try {
+        appState.lastUpdated = Date.now();
+        appState.isLoggedIn = !!firebase.auth().currentUser;
+        sessionStorage.setItem('appState', JSON.stringify(appState));
+    } catch (e) {
+        console.error("Error saving app state:", e);
+    }
+} 
 
 function restoreAppState() {
-    try {
-        const savedState = sessionStorage.getItem('appState');
-        if (savedState) {
-            const parsedState = JSON.parse(savedState);
-            if (parsedState.lastUpdated && (Date.now() - parsedState.lastUpdated < CACHE_EXPIRATION)) {
-                Object.assign(appState, parsedState);
-                return true;
-            }
-        }
-    } catch (e) {
-        console.error("Error restoring app state:", e);
-    }
-    return false;
+    try {
+        const savedState = sessionStorage.getItem('appState');
+        if (savedState) {
+            const parsedState = JSON.parse(savedState);
+            if (parsedState.lastUpdated && (Date.now() - parsedState.lastUpdated < CACHE_EXPIRATION)) {
+                Object.assign(appState, parsedState);
+                return true;
+            }
+        }
+    } catch (e) {
+        console.error("Error restoring app state:", e);
+    }
+    return false;
 }
 
 // Slider functions
@@ -270,38 +281,41 @@ function displayFeaturedProducts(productsData) {
     hideLoading('featured-products');
 }
 
-// Blog functions
-function displayLatestBlogPosts(blogPostsData) {
-    if (!blogsContainer) return;
-    
-    appState.blogPosts = blogPostsData;
-    blogsContainer.innerHTML = '';
-    
-    const blogPostsArray = Object.values(blogPostsData || {}).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)).slice(0, 5);
-    
-    if (blogPostsArray.length > 0) {
-        blogPostsArray.forEach(blogPost => {
-            const blogCard = document.createElement('div');
-            blogCard.className = 'blog-card';
-            blogCard.innerHTML = `
-                <img src="${blogPost.img}" alt="${blogPost.title}">
-                <h3>${blogPost.title}</h3>
-                <p>${blogPost.description.substring(0, 100)}...</p>
-                <a href="#">Read More</a>
-            `;
-            
-            blogCard.addEventListener('click', () => {
-                saveAppState();
-                window.location.href = `blogs_details.html?id=${blogPost.push}`;
-            });
-            
-            blogsContainer.appendChild(blogCard);
-        });
-    } else {
-        blogsContainer.innerHTML = '<p>No blog posts found.</p>';
-    }
-    
-    hideLoading('blog-section');
+// Centers functions (replaced blog functions)
+function displayFeaturedCenters(centersData) {
+    if (!centersContainer) return;
+    
+    appState.centers = centersData;
+    centersContainer.innerHTML = '';
+    
+    const centersArray = Object.values(centersData || {}).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)).slice(0, 5);
+    
+    if (centersArray.length > 0) {
+        centersArray.forEach(center => {
+            const centerCard = document.createElement('div');
+            centerCard.className = 'blog-card';
+                centerCard.innerHTML = `
+                    <img src="${center.img || 'assets/img/center-placeholder.jpg'}" alt="${center.centerName}">
+                    <div class="blog-card-content">
+                        <h3>${center.centerName}</h3>
+                        <p class="blog-date">${center.centerType}</p>
+                        <p>${center.description.substring(0, 50)}...</p>
+                        <a href="center_details.html?id=${center.userId}" class="read-more">View Details</a>
+                    </div>
+                `;
+            
+            centerCard.addEventListener('click', () => {
+                saveAppState();
+                window.location.href = `users.html?id=${center.userId}`;
+            });
+            
+            centersContainer.appendChild(centerCard);
+        });
+    } else {
+        centersContainer.innerHTML = '<p>No centers found.</p>';
+    }
+    
+    hideLoading('centers-section');
 }
 
 // Professional22 functions
@@ -350,6 +364,100 @@ function displayProfessionals22(professionalsData22) {
     hideLoading('featured-professionals22');
 }
 
+// Course functions
+function displayCourses(coursesData) {
+    if (!coursesContainer) return;
+    
+    appState.courses = coursesData;
+    coursesContainer.innerHTML = '';
+    
+    const coursesArray = Object.values(coursesData || {}).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)).slice(0, 4);
+    
+    if (coursesArray.length > 0) {
+        coursesArray.forEach(course => {
+            const courseCard = document.createElement('div');
+            courseCard.className = 'course-card';
+            courseCard.innerHTML = `
+                <img src="${course.img}" alt="${course.title}">
+                <h3>${course.title}</h3>
+                <p>${course.description.substring(0, 100)}...</p>
+            `;
+            
+            courseCard.addEventListener('click', () => {
+                saveAppState();
+                window.location.href = `course_details.html?id=${course.push}`;
+            });
+            
+            coursesContainer.appendChild(courseCard);
+        });
+    } else {
+        coursesContainer.innerHTML = '<p>No courses available.</p>';
+    }
+    
+    hideLoading('courses-section');
+}
+
+// Tools functions
+function displayTools(toolsData) {
+    if (!toolsContainer) return;
+    
+    appState.tools = toolsData;
+    toolsContainer.innerHTML = '';
+    
+    const toolsArray = Object.values(toolsData || {}).sort((a, b) => (b.time || 0) - (a.time || 0)).slice(0, 4);
+    
+    if (toolsArray.length > 0) {
+        // Show the tools section
+        document.getElementById('tools-section').style.display = 'block';
+        
+        toolsArray.forEach(tool => {
+            const toolCard = document.createElement('div');
+            toolCard.className = 'tool-card';
+            toolCard.innerHTML = `
+                <img src="${tool.img}" alt="${tool.title}">
+                <h3>${tool.title}</h3>
+                
+                 <div class="tool-actions">
+          <button class="btn btn-primary download-btn" data-id="${tool.push}">
+            <i class='bx bx-download'></i> Download
+          </button>
+          ${tool.pdfUrl ? `
+         ` : ''}
+        </div>
+            `;
+            
+            
+            
+            // Add event listeners to download buttons
+  document.querySelectorAll('.download-btn').forEach(button => {
+    button.addEventListener('click', function() {
+      const toolId = this.getAttribute('data-id');
+      const tool = toolsData.find(t => t.push === toolId);
+      if (tool) {
+        generateToolDocument(tool);
+      }
+    });
+  });
+  
+  // Add event listeners to view buttons
+  document.querySelectorAll('.view-btn').forEach(button => {
+    button.addEventListener('click', function() {
+      const pdfUrl = this.getAttribute('data-url');
+      window.open(pdfUrl, '_blank');
+    });
+  });
+
+            
+            toolsContainer.appendChild(toolCard);
+        });
+    } else {
+        // Hide the tools section if no tools
+        document.getElementById('tools-section').style.display = 'none';
+    }
+    
+    hideLoading('tools-section');
+}
+
 // Error handler function
 function handleProfessionalError(sectionId) {
     return error => {
@@ -365,7 +473,7 @@ function handleProfessionalError(sectionId) {
 
 // Initialize the application
 function initializeApp() {
-    const stateRestored = restoreAppState();
+    const stateRestored = restoreAppState();
     
     // Check navigation type
     const navigationEntries = performance.getEntriesByType("navigation");
@@ -378,6 +486,8 @@ function initializeApp() {
         if (appState.professionals22) displayProfessionals22(appState.professionals22);
         if (appState.products) displayFeaturedProducts(appState.products);
         if (appState.blogPosts) displayLatestBlogPosts(appState.blogPosts);
+        if (appState.courses) displayCourses(appState.courses);
+        if (appState.tools) displayTools(appState.tools);
         if (appState.slider.slides.length > 0) {
             renderSlides();
             if (appState.slider.isAutoSliding) startAutoSlide();
@@ -447,19 +557,51 @@ function initializeApp() {
         });
     }
     
-    // Initialize blog posts
-    if (stateRestored && appState.blogPosts) {
-        displayLatestBlogPosts(appState.blogPosts);
+   // Initialize centers (replaced blogs)
+    if (stateRestored && appState.centers) {
+        displayFeaturedCenters(appState.centers);
+    } else {
+        showLoading('centers-section');
+        centersRef.once('value').then(snapshot => {
+            displayFeaturedCenters(snapshot.val());
+        }).catch(error => {
+            console.error("Error loading centers:", error);
+            if (centersContainer) {
+                centersContainer.innerHTML = '<p class="error">Error loading centers. Showing cached data.</p>';
+            }
+            hideLoading('centers-section');
+        });
+    }
+    
+    // Initialize courses
+    if (stateRestored && appState.courses) {
+        displayCourses(appState.courses);
     } else {
-        showLoading('blog-section');
-        blogPostsRef.once('value').then(snapshot => {
-            displayLatestBlogPosts(snapshot.val());
+        showLoading('courses-section');
+        coursesRef.once('value').then(snapshot => {
+            displayCourses(snapshot.val());
         }).catch(error => {
-            console.error("Error loading blog posts:", error);
-            if (blogsContainer) {
-                blogsContainer.innerHTML = '<p class="error">Error loading blog posts. Showing cached data.</p>';
+            console.error("Error loading courses:", error);
+            if (coursesContainer) {
+                coursesContainer.innerHTML = '<p class="error">Error loading courses.</p>';
             }
-            hideLoading('blog-section');
+            hideLoading('courses-section');
+        });
+    }
+    
+    // Initialize tools
+    if (stateRestored && appState.tools) {
+        displayTools(appState.tools);
+    } else {
+        showLoading('tools-section');
+        toolsRef.once('value').then(snapshot => {
+            displayTools(snapshot.val());
+        }).catch(error => {
+            console.error("Error loading tools:", error);
+            if (toolsContainer) {
+                toolsContainer.innerHTML = '<p class="error">Error loading tools.</p>';
+            }
+            hideLoading('tools-section');
         });
     }
     

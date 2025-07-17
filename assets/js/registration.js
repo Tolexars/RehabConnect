@@ -1,4 +1,4 @@
-// auth.js - Complete Implementation with Practitioner, Supplier, and Center Registration
+// registration.js - Complete Implementation with Regular User Registration
 const DEBUG = true;
 
 function initializeApp() {
@@ -48,6 +48,23 @@ function setupEventListeners() {
     document.querySelectorAll('.modal .close, .modal .modal-close').forEach(btn => {
         btn.addEventListener('click', hideAllModals);
     });
+
+    // Regular User CTA
+    const userRegisterBtn = document.getElementById('user-register-btn');
+    if (userRegisterBtn) {
+        userRegisterBtn.addEventListener('click', () => {
+            const user = auth.currentUser;
+            if (DEBUG) console.log("Regular User CTA clicked. User:", user ? user.uid : "None");
+            
+            if (user) {
+                alert('You are already registered and logged in!');
+            } else {
+                sessionStorage.removeItem('postAuthAction');
+                showModal('auth-modal');
+                switchToRegisterForm();
+            }
+        });
+    }
 
     // Supplier CTA
     const supplierCtaBtn = document.getElementById('supplier-cta-btn');
@@ -106,6 +123,7 @@ function setupEventListeners() {
             if (DEBUG) console.log("Login button clicked.");
             sessionStorage.removeItem('postAuthAction');
             showModal('auth-modal');
+            switchToLoginForm();
         });
     }
 
@@ -162,6 +180,23 @@ function setupEventListeners() {
     }
 }
 
+// Auth Switching Functions
+function switchToLoginForm() {
+    if (DEBUG) console.log("Switching to login form");
+    document.querySelector('.auth-tab[data-form="register"]').classList.remove('active');
+    document.querySelector('.auth-tab[data-form="login"]').classList.add('active');
+    document.getElementById('register-form').classList.remove('active');
+    document.getElementById('login-form').classList.add('active');
+}
+
+function switchToRegisterForm() {
+    if (DEBUG) console.log("Switching to register form");
+    document.querySelector('.auth-tab[data-form="login"]').classList.remove('active');
+    document.querySelector('.auth-tab[data-form="register"]').classList.add('active');
+    document.getElementById('login-form').classList.remove('active');
+    document.getElementById('register-form').classList.add('active');
+}
+
 // Modal Management
 function showModal(modalId) {
     if (DEBUG) console.log("Showing modal:", modalId);
@@ -178,6 +213,8 @@ function hideAllModals() {
         if (modal.id === 'auth-modal') {
             document.getElementById('login-form').reset();
             showError('login-error', '');
+            document.getElementById('register-form').reset();
+            showError('register-error', '');
         } else if (modal.id === 'supplier-modal') {
             document.getElementById('supplier-form').reset();
             showError('supplier-error', '');
@@ -194,14 +231,25 @@ function hideAllModals() {
 // Auth Forms
 function setupAuthForms() {
     if (DEBUG) console.log("Setting up auth forms...");
+    
+    // Add switching event listeners
+    document.getElementById('show-register')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        switchToRegisterForm();
+    });
+
+    document.getElementById('show-login')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        switchToLoginForm();
+    });
+
+    // Login Form
     const loginForm = document.getElementById('login-form');
     if (loginForm) {
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             showError('login-error', '');
             
-            
-
             const email = loginForm['login-email'].value;
             const password = loginForm['login-password'].value;
 
@@ -220,6 +268,46 @@ function setupAuthForms() {
             } catch (error) {
                 if (DEBUG) console.error("Login error:", error.message);
                 showError('login-error', error.message);
+            }
+        });
+    }
+
+    // Registration Form
+    const registerForm = document.getElementById('register-form');
+    if (registerForm) {
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            showError('register-error', '');
+            
+            const name = registerForm['register-name'].value;
+            const email = registerForm['register-email'].value;
+            const password = registerForm['register-password'].value;
+
+            try {
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+                
+                // Save user data to database
+                await database.ref('userdata/' + user.uid).set({
+                    name: name,
+                    email: email,
+                    role: 'regular',
+                    createdAt: firebase.database.ServerValue.TIMESTAMP
+                });
+                
+                if (DEBUG) console.log("Registration successful! User:", user.uid);
+                hideAllModals();
+                alert('Account created successfully! You are now logged in.');
+                
+                // Handle post-registration redirect
+                const redirectTarget = sessionStorage.getItem('postAuthRedirect');
+                if (redirectTarget === 'ai-assistant') {
+                    sessionStorage.removeItem('postAuthRedirect');
+                    window.location.href = '/ai-assistant/';
+                }
+            } catch (error) {
+                if (DEBUG) console.error("Registration error:", error.message);
+                showError('register-error', error.message);
             }
         });
     }

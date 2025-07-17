@@ -1,330 +1,296 @@
+// profile.js - Profile editing functionality
 document.addEventListener('DOMContentLoaded', () => {
     const auth = firebase.auth();
     const database = firebase.database();
     const storage = firebase.storage();
     
-    // Get profile ID from URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const profileId = urlParams.get('id');
-    
     // DOM Elements
     const profileForm = document.getElementById('profile-form');
     const profilePreview = document.getElementById('profile-preview');
-    const profileImageInput = document.getElementById('profile-image');
-    const professionalSection = document.getElementById('professional-section');
+    const profileUpload = document.getElementById('profile-upload');
+    const progressContainer = document.getElementById('progress-container');
+    const progressBar = document.getElementById('progress-bar');
+    const progressText = document.getElementById('progress-text');
     const cancelBtn = document.getElementById('cancel-btn');
-    const errorMessage = document.getElementById('error-message');
-    const saveBtn = document.getElementById('save-btn');
+    
+    // Form fields
+    const nameInput = document.getElementById('name');
+    const emailInput = document.getElementById('email');
+    const phoneInput = document.getElementById('phone');
+    const locationInput = document.getElementById('location');
+    
+    // Professional fields
+    const titleInput = document.getElementById('title');
+    const experienceInput = document.getElementById('experience');
+    const educationInput = document.getElementById('education');
+    const bioInput = document.getElementById('bio');
+    
+    // Supplier fields
+    const organizationInput = document.getElementById('organization');
+    const productsInput = document.getElementById('products');
+    
+    // Center fields
+    const centerNameInput = document.getElementById('center-name');
+    const centerTypeSelect = document.getElementById('center-type');
+    const addressInput = document.getElementById('address');
+    const hoursInput = document.getElementById('hours');
+    const descriptionInput = document.getElementById('description');
+    
+    // Section containers
+    const professionalSection = document.getElementById('professional-section');
+    const supplierSection = document.getElementById('supplier-section');
+    const centerSection = document.getElementById('center-section');
     
     let currentUser = null;
-    let isProfessional = false;
-    let currentImageUrl = '';
-    let newImageFile = null;
-    let progressElements = null;
-
-    // Initialize the form
-    function initializeForm() {
-        auth.onAuthStateChanged(async (user) => {
-            if (!user || user.uid !== profileId) {
-                window.location.href = `users.html?id=${profileId}`;
-                return;
-            }
-            
-            currentUser = user;
-            await loadProfileData();
-            createUploadProgress();
-            
-            // Verify Firebase initialization
-            if (!firebase.apps.length) {
-                showError('Firebase not initialized');
-                return;
+    let profileType = null;
+    let newImageUrl = null;
+    let tempImageUrl = null;
+    
+    // Initialize profile
+    function initializeProfile() {
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                currentUser = user;
+                emailInput.value = user.email;
+                loadProfileData(user.uid);
+            } else {
+                window.location.href = 'index.html';
             }
         });
+        
+        // Event listeners
+        profileUpload.addEventListener('change', handleImageUpload);
+        profileForm.addEventListener('submit', handleFormSubmit);
+        cancelBtn.addEventListener('click', () => {
+            window.history.back();
+        });
     }
-
-    // Load profile data with error handling
-    async function loadProfileData() {
+    
+    // Load profile data
+    async function loadProfileData(uid) {
         try {
-            const [userSnapshot, professionalSnapshot] = await Promise.all([
-                database.ref(`userdata/${profileId}`).once('value'),
-                database.ref(`professionals/${profileId}`).once('value')
+            // Check profile type
+            const [userSnap, professionalSnap, supplierSnap, centerSnap] = await Promise.all([
+                database.ref(`userdata/${uid}`).once('value'),
+                database.ref(`professionals/${uid}`).once('value'),
+                database.ref(`merchants`).orderByChild('userId').equalTo(uid).once('value'),
+                database.ref(`centers/${uid}`).once('value')
             ]);
-
-            const userData = userSnapshot.val() || {};
-            const professionalData = professionalSnapshot.val() || {};
             
-            // Set basic info
-            document.getElementById('name').value = userData.name || '';
-            document.getElementById('job').value = userData.job || '';
-            document.getElementById('email').value = userData.email || '';
-            document.getElementById('phone').value = userData.phone || '';
-            document.getElementById('location').value = userData.location || '';
+            const userData = userSnap.val() || {};
+            const isProfessional = professionalSnap.exists();
+            const isSupplier = supplierSnap.exists();
+            const isCenter = centerSnap.exists();
             
-            // Set professional info if exists
-            if (professionalSnapshot.exists()) {
-                isProfessional = true;
+            // Set profile type and show relevant sections
+            if (isProfessional) {
+                profileType = 'professional';
                 professionalSection.style.display = 'block';
-                document.getElementById('specialty').value = professionalData.specialty || '';
-                document.getElementById('experience').value = professionalData.experience || '';
-                document.getElementById('education').value = professionalData.education || '';
-                document.getElementById('bio').value = professionalData.bio || '';
+                const professionalData = professionalSnap.val();
+                populateProfessionalForm(professionalData);
+            } else if (isSupplier) {
+                profileType = 'supplier';
+                supplierSection.style.display = 'block';
+                // Get first supplier record
+                const supplierRecords = supplierSnap.val();
+                const supplierKey = Object.keys(supplierRecords)[0];
+                const supplierData = supplierRecords[supplierKey];
+                populateSupplierForm(supplierData);
+            } else if (isCenter) {
+                profileType = 'center';
+                centerSection.style.display = 'block';
+                const centerData = centerSnap.val();
+                populateCenterForm(centerData);
             }
             
-            // Set profile image with cache busting
+            // Populate common fields
+            nameInput.value = userData.name || '';
+            phoneInput.value = userData.phone || '';
+            locationInput.value = userData.location || '';
+            
+            // Set profile image
             if (userData.img) {
-                currentImageUrl = userData.img;
-                profilePreview.src = `${userData.img}?t=${Date.now()}`;
-                profilePreview.onerror = () => {
-                    profilePreview.src = 'assets/img/profile.png';
-                };
+                profilePreview.src = userData.img;
+                tempImageUrl = userData.img;
             }
+            
         } catch (error) {
-            console.error('Profile load error:', error);
-            showError('Failed to load profile data');
+            console.error("Error loading profile data:", error);
+            alert('Failed to load profile data. Please try again.');
         }
     }
-
-    // Image preview handler with better error handling
-    profileImageInput.addEventListener('change', (e) => {
+    
+    // Populate professional form
+    function populateProfessionalForm(data) {
+        titleInput.value = data.job || '';
+        experienceInput.value = data.experience || '';
+        educationInput.value = data.education || '';
+        bioInput.value = data.bio || '';
+    }
+    
+    // Populate supplier form
+    function populateSupplierForm(data) {
+        organizationInput.value = data.orgName || '';
+        productsInput.value = data.productsOffered || data.products || '';
+    }
+    
+    // Populate center form
+    function populateCenterForm(data) {
+        centerNameInput.value = data.centerName || '';
+        centerTypeSelect.value = data.centerType || '';
+        addressInput.value = data.address || '';
+        hoursInput.value = data.operatingHours || '';
+        descriptionInput.value = data.description || '';
+    }
+    
+    // Handle image upload
+    function handleImageUpload(e) {
         const file = e.target.files[0];
         if (!file) return;
-
-        errorMessage.style.display = 'none';
         
         // Validate file
         if (file.size > 2 * 1024 * 1024) {
-            showError('Image must be less than 2MB');
-            resetFileInput();
+            alert('Image file size exceeds 2MB limit.');
             return;
         }
         
-        const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
-        if (!validTypes.includes(file.type)) {
-            showError('Only JPG, PNG or GIF images allowed');
-            resetFileInput();
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+        if (!allowedTypes.includes(file.type)) {
+            alert('Only JPG, PNG, GIF images are allowed.');
             return;
         }
         
-        // Preview image
+        // Show preview
         const reader = new FileReader();
-        reader.onloadstart = () => {
-            profilePreview.src = 'assets/img/loading.gif';
-        };
         reader.onload = (event) => {
             profilePreview.src = event.target.result;
-            newImageFile = file;
-        };
-        reader.onerror = () => {
-            showError('Failed to preview image');
-            resetFileInput();
+            tempImageUrl = event.target.result;
         };
         reader.readAsDataURL(file);
-    });
-
-    // Reset file input
-    function resetFileInput() {
-        profileImageInput.value = '';
-        profilePreview.src = currentImageUrl || 'assets/img/profile.png';
+        
+        // Show progress container
+        progressContainer.style.display = 'block';
+        progressBar.style.width = '0%';
+        progressText.textContent = '0%';
+        
+        // Upload to Firebase Storage
+        const storageRef = storage.ref(`profile_images/${currentUser.uid}/${file.name}`);
+        const uploadTask = storageRef.put(file);
+        
+        uploadTask.on('state_changed',
+            (snapshot) => {
+                // Progress tracking
+                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                progressBar.style.width = `${progress}%`;
+                progressText.textContent = `${Math.round(progress)}%`;
+            },
+            (error) => {
+                // Handle unsuccessful uploads
+                console.error("Upload error:", error);
+                alert('Image upload failed. Please try again.');
+                progressContainer.style.display = 'none';
+            },
+            () => {
+                // Handle successful uploads
+                uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
+                    newImageUrl = downloadURL;
+                    progressContainer.style.display = 'none';
+                });
+            }
+        );
     }
-
-    // Save handler with comprehensive error handling
-    saveBtn.addEventListener('click', async (e) => {
+    
+    // Handle form submission
+    async function handleFormSubmit(e) {
         e.preventDefault();
-        errorMessage.style.display = 'none';
         
-        if (!validateForm()) return;
-        
-        saveBtn.textContent = 'Saving...';
-        saveBtn.disabled = true;
-        
-        try {
-            const imageUrl = await handleImageUpload();
-            await updateProfileData(imageUrl);
-            
-            // Force refresh by adding timestamp
-            window.location.href = `users.html?id=${currentUser.uid}&t=${Date.now()}`;
-        } catch (error) {
-            console.error('Save error:', error);
-            showError(`Save failed: ${error.message || 'Please try again'}`);
-        } finally {
-            saveBtn.textContent = 'Save Changes';
-            saveBtn.disabled = false;
-        }
-    });
-
-    // Form validation
-    function validateForm() {
-        if (!document.getElementById('name').value.trim()) {
-            showError('Name is required');
-            return false;
-        }
-        if (!document.getElementById('email').value.trim()) {
-            showError('Email is required');
-            return false;
-        }
-        return true;
-    }
-
-    // Handle image upload process
-    async function handleImageUpload() {
-        if (!newImageFile) return currentImageUrl;
-        
-        try {
-            showUploadProgress();
-            
-            const fileExt = newImageFile.name.split('.').pop();
-            const fileName = `profile_${Date.now()}.${fileExt}`;
-            const storageRef = storage.ref(`profile_images/${currentUser.uid}/${fileName}`);
-            
-            const snapshot = await new Promise((resolve, reject) => {
-                const uploadTask = storageRef.put(newImageFile);
-                
-                uploadTask.on('state_changed',
-                    (snapshot) => {
-                        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                        updateUploadProgress(progress);
-                    },
-                    (error) => {
-                        hideUploadProgress();
-                        reject(new Error('Image upload failed'));
-                    },
-                    () => {
-                        hideUploadProgress();
-                        resolve(uploadTask.snapshot);
-                    }
-                );
-            });
-            
-            const downloadURL = await snapshot.ref.getDownloadURL();
-            return `${downloadURL}?t=${Date.now()}`;
-        } catch (error) {
-            hideUploadProgress();
-            throw error;
-        }
-    }
-
-    // Update profile data in Firebase
-    async function updateProfileData(imageUrl) {
-        const userData = {
-            name: document.getElementById('name').value.trim(),
-            job: document.getElementById('job').value.trim(),
-            email: document.getElementById('email').value.trim(),
-            phone: document.getElementById('phone').value.trim(),
-            location: document.getElementById('location').value.trim(),
-            img: imageUrl,
-            lastUpdated: firebase.database.ServerValue.TIMESTAMP
+        // Collect common data
+        const profileData = {
+            name: nameInput.value.trim(),
+            phone: phoneInput.value.trim(),
+            location: locationInput.value.trim(),
+            updatedAt: firebase.database.ServerValue.TIMESTAMP
         };
         
-        // Update user data
-        await database.ref(`userdata/${currentUser.uid}`).update(userData);
+        // Update profile image if changed
+        if (newImageUrl) {
+            profileData.img = newImageUrl;
+        }
         
-        // Update professional data if professional
-        if (isProfessional) {
-            const professionalData = {
-                fullName: userData.name,
-                specialty: document.getElementById('specialty').value.trim(),
-                experience: parseInt(document.getElementById('experience').value) || 0,
-                education: document.getElementById('education').value.trim(),
-                bio: document.getElementById('bio').value.trim(),
-                img: imageUrl,
-                lastUpdated: firebase.database.ServerValue.TIMESTAMP
-            };
+        try {
+            // Update userdata
+            await database.ref(`userdata/${currentUser.uid}`).update(profileData);
             
-            await database.ref(`professionals/${currentUser.uid}`).update(professionalData);
+            // Update profile type specific data
+            if (profileType === 'professional') {
+                await updateProfessionalData();
+            } else if (profileType === 'supplier') {
+                await updateSupplierData();
+            } else if (profileType === 'center') {
+                await updateCenterData();
+            }
+            
+            alert('Profile updated successfully!');
+            window.location.href = `users.html?id=${currentUser.uid}`;
+            
+        } catch (error) {
+            console.error("Update error:", error);
+            alert('Failed to update profile. Please try again.');
         }
     }
-
-    // Progress indicator functions
-    function createUploadProgress() {
-        // Remove existing if any
-        if (progressElements?.container) {
-            progressElements.container.remove();
-        }
-        
-        const container = document.createElement('div');
-        container.id = 'upload-progress';
-        Object.assign(container.style, {
-            position: 'fixed',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            backgroundColor: 'rgba(0,0,0,0.85)',
-            color: 'white',
-            padding: '20px',
-            borderRadius: '8px',
-            zIndex: '10000',
-            display: 'none',
-            textAlign: 'center',
-            minWidth: '250px'
-        });
-        
-        const text = document.createElement('p');
-        text.id = 'progress-text';
-        text.textContent = 'Uploading image... 0%';
-        text.style.margin = '0 0 15px 0';
-        
-        const barContainer = document.createElement('div');
-        barContainer.style.width = '250px';
-        barContainer.style.height = '10px';
-        barContainer.style.backgroundColor = '#444';
-        barContainer.style.borderRadius = '5px';
-        barContainer.style.overflow = 'hidden';
-        barContainer.style.margin = '0 auto';
-        
-        const barFill = document.createElement('div');
-        barFill.id = 'progress-fill';
-        Object.assign(barFill.style, {
-            height: '100%',
-            width: '0%',
-            backgroundColor: '#4a89dc',
-            transition: 'width 0.3s ease'
-        });
-        
-        barContainer.appendChild(barFill);
-        container.appendChild(text);
-        container.appendChild(barContainer);
-        document.body.appendChild(container);
-        
-        progressElements = {
-            container,
-            text,
-            fill: barFill
+    
+    // Update professional data
+    async function updateProfessionalData() {
+        const professionalData = {
+            name: nameInput.value.trim(),
+            job: titleInput.value.trim(),
+            experience: experienceInput.value.trim(),
+            education: educationInput.value.trim(),
+            bio: bioInput.value.trim(),
+            updatedAt: firebase.database.ServerValue.TIMESTAMP
         };
-    }
-
-    function showUploadProgress() {
-        if (progressElements) {
-            progressElements.container.style.display = 'block';
-            progressElements.fill.style.width = '0%';
-            progressElements.text.textContent = 'Uploading image... 0%';
+        
+        if (newImageUrl) {
+            professionalData.img = newImageUrl;
         }
+        
+        await database.ref(`professionals/${currentUser.uid}`).update(professionalData);
     }
-
-    function updateUploadProgress(percent) {
-        if (progressElements) {
-            progressElements.fill.style.width = `${percent}%`;
-            progressElements.text.textContent = `Uploading image... ${Math.round(percent)}%`;
+    
+    // Update supplier data
+    async function updateSupplierData() {
+        // First find the supplier key
+        const supplierSnap = await database.ref('merchants').orderByChild('userId').equalTo(currentUser.uid).once('value');
+        const supplierRecords = supplierSnap.val();
+        const supplierKey = Object.keys(supplierRecords)[0];
+        
+        const supplierData = {
+            orgName: organizationInput.value.trim(),
+            productsOffered: productsInput.value.trim(),
+            updatedAt: firebase.database.ServerValue.TIMESTAMP
+        };
+        
+        await database.ref(`merchants/${supplierKey}`).update(supplierData);
+    }
+    
+    // Update center data
+    async function updateCenterData() {
+        const centerData = {
+            centerName: centerNameInput.value.trim(),
+            centerType: centerTypeSelect.value,
+            address: addressInput.value.trim(),
+            operatingHours: hoursInput.value.trim(),
+            description: descriptionInput.value.trim(),
+            updatedAt: firebase.database.ServerValue.TIMESTAMP
+        };
+        
+        if (newImageUrl) {
+            centerData.img = newImageUrl;
         }
+        
+        await database.ref(`centers/${currentUser.uid}`).update(centerData);
     }
-
-    function hideUploadProgress() {
-        if (progressElements) {
-            progressElements.container.style.display = 'none';
-        }
-    }
-
-    // Cancel button
-    cancelBtn.addEventListener('click', () => {
-        window.location.href = `users.html?id=${profileId}`;
-    });
-
-    // Error display
-    function showError(message) {
-        errorMessage.textContent = message;
-        errorMessage.style.display = 'block';
-        errorMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-
-    // Initialize the app
-    initializeForm();
+    
+    // Initialize
+    initializeProfile();
 });

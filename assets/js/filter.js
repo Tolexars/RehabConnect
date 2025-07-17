@@ -70,7 +70,6 @@ function displayItems(items) {
             <img src="${product.img}" alt="${product.title}">
             <p>${product.title}</p>
             <h2>${product.price}</h2>
-            <button href="#" class="button4">VIEW</button>
          </a>`;
         allProductsHtml += individualProductHtml;
     });
