@@ -337,6 +337,76 @@ img {
 }
 
 
+/* Dropdown menu */
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: #f9f9f9;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+  border-radius: 5px;
+}
+
+.dropdown-content a {
+  color: black;
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+  transition: background-color 0.3s;
+}
+
+.dropdown-content a:hover {
+  background-color: #00BCD4;
+  color: white;
+}
+
+.dropdown:hover .dropdown-content {
+  display: block;
+}
+
+/* Tools section */
+.tools-container {
+  display: flex;
+  overflow-x: auto;
+  padding-bottom: 15px;
+  gap: 15px;
+}
+
+.tool-card {
+  min-width: 250px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  text-align: center;
+  padding: 15px;
+  flex-shrink: 0;
+}
+
+.tool-card img {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 5px;
+  margin-bottom: 10px;
+}
+
+.tool-card h3 {
+  margin: 10px 0 5px;
+  font-size: 1.2em;
+}
+
+.tool-card p {
+  font-size: 0.9em;
+  color: #6c757d;
+  margin-bottom: 10px;
+}
+
 /* ===== Loading Animation Styles ===== */
 .loading-overlay {
     position: absolute;
@@ -593,9 +663,8 @@ img {
 }
   
     
-
 /* Join Practitioner Section */
-.join-practitioner {
+.join-practitioner22 {
     background: linear-gradient(135deg, #00BCD4, #3182ce);
     color: white;
     padding: 3rem 1rem;
@@ -603,24 +672,24 @@ img {
     margin: 2rem 0;
 }
 
-.join-container {
+.join-container22 {
     max-width: 800px;
     margin: 0 auto;
 }
 
-.join-container h2 {
+.join-container22 h2 {
     font-size: 2rem;
     margin-bottom: 1rem;
     color: white;
 }
 
-.join-container p {
+.join-container22 p {
     font-size: 1.1rem;
     margin-bottom: 2rem;
     opacity: 0.9;
 }
 
-.whatsapp-button {
+.whatsapp-button22 {
     background-color: #25D366;
     color: white;
     border: none;
@@ -634,11 +703,12 @@ img {
     width: 80%;
 }
 
-.whatsapp-button:hover {
+.whatsapp-button22:hover {
     background-color: #128C7E;
     transform: translateY(-3px);
     box-shadow: 0 10px 20px rgba(0,0,0,0.1);
 }
+
 
 
 /* Centered Modern Footer */
@@ -1115,6 +1185,7 @@ button{
     padding: 2rem 1rem;
     text-align: center;
     background: #f8f9fa;
+    margin: 50px;
 }
 
 @media screen and (min-width: 992px) {
@@ -1377,3 +1448,77 @@ button{
     background: #f0f0f0; /* Fallback color */
 }
 
+/* Ad container base styles */
+.ad-container {
+  margin: 2rem auto;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  text-align: center;
+  max-width: 1200px;
+}
+
+.ad-content {
+  min-height: 250px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ad-fallback {
+  padding: 1.5rem;
+  background: #e9f7fe;
+  border-radius: 8px;
+}
+
+.fallback-cta {
+  display: inline-block;
+  background: #00BCD4;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  text-decoration: none;
+  margin-top: 0.5rem;
+}
+
+/* Ensure containers have initial size */
+#ad-middle-content,
+#ad-bottom-content {
+  min-width: 300px;
+  min-height: 250px;
+}
+
+
+/* Terms agreement styling */
+.terms-agreement {
+    display: flex;
+    align-items: center;
+    margin: 10px 0;
+    font-size: 0.9rem;
+}
+
+.terms-agreement input {
+    margin-right: 8px;
+}
+
+.terms-agreement a {
+    color: #3498db;
+    text-decoration: underline;
+}
+
+/* Register link styling */
+.register-link {
+    text-align: center;
+    margin-top: 15px;
+    font-size: 1.0rem;
+}
+
+.register-link a {
+    color: #3498db;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.register-link a:hover {
+    text-decoration: underline;
+}

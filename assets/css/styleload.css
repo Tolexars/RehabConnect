@@ -384,7 +384,7 @@
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   text-align: center;
-  padding: 15px;
+  padding: 8px;
   flex-shrink: 0;
 }
 
@@ -393,17 +393,17 @@
   height: 120px;
   object-fit: cover;
   border-radius: 5px;
-  margin-bottom: 10px;
+  margin-bottom: 5px;
 }
 
 .blog-card h3 {
-  margin: 10px 0 5px;
+  margin: 2px 0 5px;
 }
 
 .blog-card p {
   font-size: 0.9em;
   color: #6c757d;
-  margin-bottom: 10px;
+  margin-bottom: 4px;
 }
 
 .blog-card a {
@@ -544,35 +544,7 @@ footer {
 }
 
 
-/* Become Supplier Section */
-.become-supplier {
-    background: #f8f9fa;
-    padding: 2rem;
-    text-align: center;
-    margin: 2rem 0;
-}
 
-.supplier-cta h4 {
-    color: #2c3e50;
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
-}
-
-#supplier-cta-btn {
-    background: #00BCD4;
-    color: white;
-    padding: 12px 30px;
-    border: none;
-    border-radius: 25px;
-    font-size: 1.1rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-#supplier-cta-btn:hover {
-    background: #0097a7;
-    transform: translateY(-2px);
-}
 
 /* Modal Styles */
 .modal {
@@ -617,4 +589,340 @@ footer {
     padding: 8px;
     border: 1px solid #ddd;
     border-radius: 4px;
+}
+
+/* Courses and Tools sections */
+#courses-section, #tools-section {
+    padding: 20px;
+    background-color: none;
+    margin-bottom: 20px;
+    margin-top: 20px;
+    text-align: center;
+}
+
+.courses-container, .tools-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    padding: 20px;
+}
+
+.course-card, .tool-card {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 15px;
+    text-align: center;
+    filter: drop-shadow(0 0 7px #90A4AE);
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.course-card:hover, .tool-card:hover {
+    transform: translateY(-5px);
+}
+
+.course-card img, .tool-card img {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+.course-card h3, .tool-card h3 {
+    margin: 10px 0 5px;
+    font-size: 1.1em;
+}
+
+.course-card p, .tool-card p {
+    margin-bottom: 10px;
+    font-size: 0.9em;
+    color: #6c757d;
+}
+
+#view-more-courses, #view-more-tools {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: bold;
+    width: 80%;
+    display: block;
+    margin: 20px auto 0;
+    transition: background-color 0.3s ease;
+    filter: drop-shadow(0 0 7px #90A4AE);
+}
+
+#view-more-courses:hover, #view-more-tools:hover {
+    background-color: #1e7e34;
+}
+
+@media (min-width: 768px) {
+    .courses-container, .tools-container {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    
+    .course-card img, .tool-card img {
+        height: 170px;
+    }
+    
+    #view-more-courses, #view-more-tools {
+        font-size: 1.5em;
+        width: 60%;
+    }
+}
+
+@media (min-width: 992px) {
+    .course-card img, .tool-card img {
+        height: 200px;
+    }
+    
+    .course-card h3, .tool-card h3 {
+        font-size: 1.5em;
+    }
+    
+    .course-card p, .tool-card p {
+        font-size: 1.1em;
+    }
+    
+    #view-more-courses, #view-more-tools {
+        font-size: 2em;
+    }
+}
+
+@media (min-width: 1200px) {
+    .course-card img, .tool-card img {
+        height: 250px;
+    }
+    
+    .course-card h3, .tool-card h3 {
+        font-size: 1.7em;
+    }
+    
+    .course-card p, .tool-card p {
+        font-size: 1.3em;
+    }
+    
+    #view-more-courses, #view-more-tools {
+        font-size: 2.5em;
+        width: 50%;
+    }
+}
+
+.btn-primary {
+  background: #00BCD4;
+  color: black;
+  margin-bottom: 10px;
+}
+
+.btn-primary:hover {
+  background: var(--primary-dark);
+}
+
+.btn-secondary {
+  background: #28a745;
+  color: white;
+  margin-bottom: 10px;
+}
+
+.btn-secondary:hover {
+  background: #e68a00;
+}
+
+
+
+/* Add these styles for the new sections */
+.join-practitioner, .my-center, .become-supplier {
+    padding: 3rem 1rem;
+    text-align: center;
+    margin: 2rem;
+    max-width: 800px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+}
+
+.join-practitioner {
+    border-top: 5px solid #00BCD4;
+    margin-top: 6rem;
+}
+
+.my-center {
+    border-top: 5px solid #28a745;
+}
+
+.become-supplier {
+    border-top: 5px solid #9C27B0;
+}
+
+.join-container, .center-container, .supplier-container {
+    position: relative;
+    z-index: 2;
+    padding: 1rem;
+}
+
+.icon-circle {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    font-size: 2.5rem;
+}
+
+.join-practitioner .icon-circle {
+    background: rgba(0, 188, 212, 0.1);
+    color: #00BCD4;
+}
+
+.my-center .icon-circle {
+    background: rgba(120, 220, 140, 0.2);
+    color: #28a745;
+}
+
+.become-supplier .icon-circle {
+    background: rgba(156, 39, 176, 0.1);
+    color: #9C27B0;
+}
+
+.regular-user .icon-circle {
+    background: rgba(0, 188, 212, 0.1);
+    color: linear-gradient(135deg, #00BCD4, #4CAF50);
+}
+
+.whatsapp-button {
+    background: #00BCD4;
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 30px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 1rem;
+    box-shadow: 0 4px 15px rgba(0, 188, 212, 0.3);
+}
+
+.my-center .whatsapp-button {
+    background: #28a745;
+    box-shadow: 0 4px 15px rgba(120, 220, 140, 0.2);
+}
+
+.become-supplier .whatsapp-button {
+    background: #9C27B0;
+    box-shadow: 0 4px 15px rgba(255, 152, 0, 0.3);
+}
+
+.regular-user .whatsapp-button {
+    background: linear-gradient(135deg, #00BCD4, #4CAF50);
+    box-shadow: 0 4px 15px linear-gradient(135deg, #00a5bb, #2c6db5);
+}
+
+.whatsapp-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+.join-practitioner .whatsapp-button:hover {
+    background: #0097A7;
+}
+
+.my-center .whatsapp-button:hover {
+    background: #7B1FA2;
+}
+
+.become-supplier .whatsapp-button:hover {
+    background: #F57C00;
+}
+
+.regular-user .whatsapp-button:hover {
+    background: linear-gradient(135deg, #00a5bb, #2c6db5);
+}
+
+/* Add decorative elements */
+.join-practitioner::before, 
+.my-center::before, 
+.become-supplier::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+}
+
+.join-practitioner::before {
+    background: linear-gradient(90deg, #00BCD4, #80DEEA);
+}
+
+.my-center::before {
+    background: linear-gradient(90deg, #28a745, #28a745);
+}
+
+.become-supplier::before {
+    background: linear-gradient(90deg, #9C27B0, #9C27B0);
+}
+
+/* Center modal specific styles */
+#center-modal .modal-content {
+    max-width: 700px;
+}
+
+#center-modal .form-group select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 1rem;
+}
+
+
+
+@media (min-width: 768px) {
+    .join-practitioner, .my-center, .become-supplier {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* Add to styles.css */
+.regular-user {
+    padding: 3rem 1rem;
+    text-align: center;
+    margin: 2rem;
+    max-width: 800px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, #00000 0%, #ffffff 100%);
+    border-top: 5px solid linear-gradient(135deg, #00BCD4, #4CAF50);
+    margin-top: 6rem;
+}
+
+
+.auth-switch {
+    margin-top: 1rem;
+    font-size: 0.9rem;
+}
+
+.auth-switch a {
+    color: #00BCD4;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.auth-switch a:hover {
+    text-decoration: underline;
 }
