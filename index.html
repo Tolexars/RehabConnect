@@ -2,15 +2,20 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <title>The World of Rehabilitation</title>
+</head>
+<body>
+    
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Connect with Healthcare Professionals</title>
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="assets/css/styles.css">
     <link rel="stylesheet" href="assets/css/styleload.css">
-    
-    <!-- Add this to your index.html head section -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4782711076571062"
-     crossorigin="anonymous"></script>
 
 </head>
 <body>
@@ -23,9 +28,9 @@
     <ul class="nav__list">
         <li class="nav__item"><a href="#home" class="nav__link active-link" id="active">Home</a></li>
         <li class="nav__item"><a href="professionals.html?category=All" onclick="saveAppState()" class="nav__link">Professionals</a></li>
+        <li class="nav__item"><a href="blogs.html" onclick="saveAppState()" class="nav__link">Centers</a></li>
         <li class="nav__item"><a href="marketplace.html" onclick="saveAppState()" class="nav__link">Marketplace</a></li>
-        <li class="nav__item"><a href="blogs.html" onclick="saveAppState()" class="nav__link">Blogs</a></li>
-        
+        <li class="nav__item"><a href="tools.html" onclick="saveAppState()" class="nav__link">Tools</a></li>
         <li class="nav__item" id="my-profile-nav-item" style="display: none;"><a href="users.html?id=${user.uid}" onclick="saveAppState()" class="nav__link">My Profile</a></li>
         
         <div class="auth-buttons">
@@ -56,87 +61,50 @@
 
     <section id="featured-professionals">
         <h4>Featured Professionals</h4>
-        <div class="loading-overlay"><div class="spinner"></div></div>
         <div class="profiles-container">
         </div>
         <div class="view-more-container">
-            <a href="professionals.html?category=All"><button id="view-more-profile">Explore More Professional</button></a>
+            <a href="professionals.html?category=All"><button id="view-more-profile">Find More Professional</button></a>
         </div>
     </section>
     
-    <!-- Add this after the blog section -->
-<section class="join-practitioner">
-    <div class="join-container">
-        <h2>Become a Practitioner</h2>
-        <p>Join our network of healthcare professionals and reach more patients</p>
-        <button id="join-button" class="whatsapp-button"> Join now
-</button>
+     <!-- Add this after the blog section -->
+<section class="join-practitioner22">
+    <div class="join-container22">
+        <h2>Join our Network</h2>
+        <p>Join our network of healthcare professionals, suppliers or centers and reach more patients</p>
+        <a href="registration.html"><button id="join-button22" class="whatsapp-button22"> Register now</button></a>
 
     </div>
 </section>
 
     <section id="featured-products">
         <h4>New Arrival</h4>
-        <div class="loading-overlay"><div class="spinner"></div></div>
         <div class="products-container">
         </div>
         <div class="view-more-container">
-            <a href="marketplace.html" onclick="saveAppState()"><button id="view-more-products">View More Products</button></a>
+            <a href="marketplace.html" onclick="saveAppState()"><button id="view-more-products">Explore other </button></a>
         </div>
+    </section>
+   
+   
+    <section id="blog-section">
+        <h4>Find a Center</h4>
+        <div class="centers-container">
+        </div>
+        <a href="centers.html" onclick="saveAppState()"><button id="view-more-blogs">View More Blogs</button></a>
     </section>
     
-    <!-- Add this after the featured-products section -->
-<section class="become-supplier">
-    <div class="supplier-cta">
-        <h4>Want to Become a Supplier?</h4>
-        <p>Join our network of trusted medical equipment providers</p>
-        <!-- Add this button anywhere in your interface -->
-<button id="supplier-cta-btn" class="cta-button">
-    Become a Supplier
-</button>
-    </div>
-</section>
-
-<!-- Supplier Application Modal -->
-<div id="supplier-modal" class="modal">
-    <div class="modal-content">
-        <span class="close">&times;</span>
-        <h3>Supplier Application</h3>
-        <form id="supplier-form">
-            <div class="error-message" id="supplier-error"></div> <!-- ADD THIS LINE -->
-            <div class="form-group">
-                <label>Organization Name:</label>
-                <input type="text" id="org-name" required>
-            </div>
-            <div class="form-group">
-                <label>Contact Email:</label>
-                <input type="email" id="contact-email" required>
-            </div>
-            <div class="form-group">
-                <label>Phone Number:</label>
-                <input type="tel" id="contact-phone" required>
-            </div>
-            <div class="form-group">
-                <label>Products Offered:</label>
-                <textarea id="products-offered" rows="3" required></textarea>
-            </div>
-            <button type="submit">Submit Application</button>
-        </form>
-    </div>
-</div>
-
-    <section id="blog-section">
-        <h4>Latest Blog Posts</h4>
-        <div class="loading-overlay"><div class="spinner"></div></div>
-        <div class="blogs-container">
-        </div>
-        <a href="blogs.html" onclick="saveAppState()"><button id="view-more-blogs">View More Blogs</button></a>
-    </section>
+   <!-- Change blog section to courses -->
+<section id="courses-section" style="display:none;">
+    <h4>Online Courses</h4>
+    <div class="courses-container"></div>
+    <a href="courses.html"><button id="view-more-courses">View More Courses</button></a>
+</section> 
 
 
     <section id="featured-professionals22">
         <h4>Latest Members</h4>
-        <div class="loading-overlay"><div class="spinner"></div></div>
         <div class="profiles-container22">
         </div>
         <div class="view-more-container">
@@ -145,69 +113,22 @@
     </section>
     
     
-
-
-<div id="practitioner-modal" class="modal">
-    <div class="modal-content">
-        <span class="close">&times;</span>
-        <h3>Join Our Professional Network</h3>
-        <form id="practitioner-form">
-            <div class="error-message" id="practitioner-error"></div>
-            
-            <div class="form-group">
-                <label for="prof-name">Full Name:</label>
-                <input type="text" id="prof-name" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="prof-email">Contact Email:</label>
-                <input type="email" id="prof-email" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="prof-phone">Phone Number:</label>
-                <input type="tel" id="prof-phone" required>
-            </div>
-
-            <div class="form-group">
-                <label for="prof-specialty">Specialty/Profession:</label>
-                <input type="text" id="prof-specialty" placeholder="e.g., Physiotherapist, Occupational Therapist" required>
-            </div>
-
-            <div class="form-group">
-                <label for="prof-experience">Years of Experience:</label>
-                <input type="number" id="prof-experience" min="0" required>
-            </div>
-
-            <div class="form-group">
-                <label for="prof-bio">Short Professional Bio:</label>
-                <textarea id="prof-bio" rows="4" placeholder="Tell us about your experience and approach" required></textarea>
-            </div>
-
-            <div class="form-group">
-                <label for="prof-picture">Upload Profile Picture:</label>
-                <input type="file" id="prof-picture" accept="image/*">
-                <small>Max file size: 2MB. JPG, PNG, GIF allowed.</small>
-            </div>
-
-            <button type="submit">Apply to Join</button>
-        </form>
-    </div>
-</div>
-
+    <!-- Add this after the courses section -->
+<section id="tools-section" style="display:none;">
+    <h4>Assessment & Evaluation Tools</h4>
+    <div class="tools-container"></div>
+    <a href="tools.html"><button id="view-more-tools">View More Tools</button></a>
+</section>
 
 
 <!-- Add this to your HTML -->
+<!-- Updated auth-modal -->
 <div id="auth-modal" class="modal">
     <div class="modal-content">
         <span class="modal-close">&times;</span>
-        <div class="auth-tabs">
-            <div class="auth-tab active" data-form="login">Login</div>
-            <div class="auth-tab" data-form="register">Register</div>
-        </div>
-
-        <!-- Login Form -->
+        <!-- Login Form Only -->
         <form id="login-form" class="auth-form active">
+            <h3>Login to your account</h3>
             <div class="error-message" id="login-error"></div>
             <div class="form-group">
                 <input type="email" id="login-email" placeholder="Email" required>
@@ -215,23 +136,19 @@
             <div class="form-group">
                 <input type="password" id="login-password" placeholder="Password" required>
             </div>
+            
+            <!-- Terms agreement -->
+            <div class="form-group terms-agreement">
+                
+                <label for="login-terms">By clicking the login button, you agree to the <a href="terms.html" target="_blank">Terms and Conditions</a></label>
+            </div>
+            
             <button type="submit">Login</button>
-        </form>
-
-        <!-- Registration Form -->
-        <form id="register-form" class="auth-form">
-            <div class="error-message" id="register-error"></div>
-            <div class="form-group">
-                <input type="name" id="register-name" placeholder="Name" required>
+            
+            <!-- Registration link -->
+            <div class="register-link">
+                Don't have an account? <a href="registration.html">Register here</a>
             </div>
-            <div class="form-group">
-                <input type="email" id="register-email" placeholder="Email" required>
-            </div>
-            <div class="form-group">
-                <input type="password" id="register-password" 
-                       placeholder="Password (min. 6 characters)" required>
-            </div>
-            <button type="submit">Create Account</button>
         </form>
     </div>
 </div>
@@ -248,7 +165,7 @@
     <div class="footer-grid">
         <!-- Column 1: Brand Info -->
         <div class="footer-column">
-            <h3>REHABCONNECT</h3>
+            <h3>REHABVERVE</h3>
             <p>Connecting patients with top healthcare professionals</p>
             <div class="social-links">
                 <a href="#"><i class='bx bxl-facebook'></i></a>
@@ -266,7 +183,7 @@
                 <li><a href="#about">About Us</a></li>
                 <li><a href="professionals.html" onclick="saveAppState()">Professionals</a></li>
                 <li><a href="marketplace.html" onclick="saveAppState()">Marketplace</a></li>
-                <li><a href="blog.html" onclick="saveAppState()">Blogs</a></li>
+                <li><a href="centers.html" onclick="saveAppState()">Centers</a></li>
             </ul>
         </div>
         
@@ -284,17 +201,17 @@
         <div class="footer-column">
             <h4>Newsletter</h4>
             <form class="newsletter-form">
-                <input type="email" placeholder="Your email address" required>
+                <input type="email" placeholder="rehabverve@gmail.com" required>
                 <button type="submit">Subscribe</button>
             </form>
         </div>
     </div>
     
     <div class="footer-bottom">
-        <p>&copy; 2025 REHABCONNECT. All rights reserved.</p>
+        <p>&copy; 2025 REHABVERVE. All rights reserved.</p>
         <div class="legal-links">
-            <a href="#">Privacy Policy</a>
-            <a href="#">Terms of Service</a>
+            <a href="terms.html">Privacy Policy</a>
+            <a href="terms.html">Terms of Service</a>
             <a href="#">Cookie Policy</a>
         </div>
     </div>
@@ -307,6 +224,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
+
     <!-- Corrected script order -->
 <script src="https://www.gstatic.com/firebasejs/5.5.0/firebase.js"></script>
 <script src="assets/js/configuration.js"></script>
@@ -314,6 +232,5 @@
 
 <script src="assets/js/auth.js"></script>
 <script src="assets/js/main.js"></script>
-<script src="assets/js/ads.js"></script>
 </body>
 </html>

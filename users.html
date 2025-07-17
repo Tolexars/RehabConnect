@@ -14,150 +14,195 @@
     <header class="l-header">
         <nav class="nav bd-grid">
             <div>
-                <h2><span class="home__title-color">REHAB</span>CONNECT</h2>
+                <h2><span class="home__title-color">REHAB</span>VERVE</h2>
             </div>
-            <div class="nav__menu" id="nav-menu">
-    <ul class="nav__list">
-        <li class="nav__item"><a href="#home" class="nav__link active-link" id="active">Home</a></li>
-        <li class="nav__item"><a href="professionals.html?category=All" onclick="saveAppState()" class="nav__link">Professionals</a></li>
-        <li class="nav__item"><a href="marketplace.html" onclick="saveAppState()" class="nav__link">Marketplace</a></li>
-        <li class="nav__item"><a href="blogs.html" onclick="saveAppState()" class="nav__link">Blogs</a></li>
-        <li class="nav__item" id="my-profile-nav-item" style="display: none;"><a href="users.html?id=${user.uid}" class="nav__link">My Profile</a></li>
-        
-        <div class="auth-buttons">
-            <li class="nav_item"> <button id="login-btn" class="nav__link">Login</button></li>
-            <li class="nav_item"><button id="logout-btn">Logout</button></li>
-        </div>
-    </ul>
-</div>
-<div class="nav__toggle" id="nav-toggle" style="display:none">
-    <i class='bx bx-menu'></i>
-</div>
-<div class="profile-image-nav" id="nav-toggle" style="display: none;">
-    <img src="" alt="Profile" class="nav-profile-img">
-</div>
         </nav>
     </header>
     
-    <!-- Keep the rest of the HTML the same, just ensure these elements have matching structure -->
-<div class="user-profile-container">
-    <!-- Profile Header Section -->
-    <div class="profile-header">
-        <div class="edit-profile-icon" id="edit-icon" style="display: none;">
+    <div class="user-profile-container">
+        <!-- Profile Header Section -->
+        <div class="profile-header">
+            <div class="edit-profile-icon" id="edit-icon" style="display: none;">
                 <i class='bx bx-edit'></i>
             </div>
-        <div class="profile-image-container">
-            <img src="assets/img/profile.png" class="profile-image" alt="Profile" id="profile-image">
-            <div class="online-status"></div>
+            <div class="profile-image-container">
+                <img src="assets/img/profile.png" class="profile-image" alt="Profile" id="profile-image">
+                <div class="online-status"></div>
+            </div>
+            <h1 class="user-name">Loading...</h1>
+            <p class="user-title">Loading title...</p>
             
-        </div>
-        <h1 class="user-name">Loading...</h1>
-        <p class="user-title">Loading title...</p>
-        
-        <!-- Contact Icons -->
-        <div class="contact-icons">
-            <a href="#" class="contact-icon whatsapp" id="whatsapp-link">
-                <i class='bx bxl-whatsapp'></i>
-            </a>
-            <a href="#" class="contact-icon email" id="email-link">
-                <i class='bx bx-envelope'></i>
-            </a>
-            <a href="#" class="contact-icon phone" id="phone-link">
-                <i class='bx bx-phone'></i>
-            </a>
-        </div>
-    </div>
-
-    <!-- Profile Details Section -->
-    <div class="profile-details">
-        <!-- Contact Information Card -->
-        <div class="detail-card">
-            <h2 class="section-title">Contact Information</h2>
-            <div class="info-item">
-                <i class='bx bx-envelope'></i>
-                <div>
-                    <p class="info-label">Email</p>
-                    <p class="info-value" id="email-value">Loading...</p>
-                </div>
+            <!-- Contact Icons -->
+            <div class="contact-icons">
+                <a href="#" class="contact-icon whatsapp" id="whatsapp-link">
+                    <i class='bx bxl-whatsapp'></i>
+                </a>
+                <a href="#" class="contact-icon email" id="email-link">
+                    <i class='bx bx-envelope'></i>
+                </a>
+                <a href="#" class="contact-icon phone" id="phone-link">
+                    <i class='bx bx-phone'></i>
+                </a>
             </div>
-            <div class="info-item">
-                <i class='bx bx-phone'></i>
-                <div>
-                    <p class="info-label">Phone</p>
-                    <p class="info-value" id="phone-value">Loading...</p>
-                </div>
-            </div>
-            <div class="info-item">
-                <i class='bx bx-map'></i>
-                <div>
-                    <p class="info-label">Location</p>
-                    <p class="info-value" id="location-value">Loading...</p>
-                </div>
-            </div>
-            
         </div>
 
-        <!-- Professional Details Card -->
-        <div class="detail-card professional" id="professional-details" style="display: none;">
-            <h2 class="section-title">Professional Details</h2>
-            <div class="info-grid">
+        <!-- Profile Details Section -->
+        <div class="profile-details">
+            <!-- Contact Information Card -->
+            <div class="detail-card">
+                <h2 class="section-title">Contact Information</h2>
                 <div class="info-item">
-                    <i class='bx bx-briefcase'></i>
+                    <i class='bx bx-envelope'></i>
                     <div>
-                        <p class="info-label">Experience</p>
-                        <p class="info-value" id="experience-value">Loading...</p>
+                        <p class="info-label">Email</p>
+                        <p class="info-value" id="email-value">Loading...</p>
                     </div>
                 </div>
                 <div class="info-item">
-                    <i class='bx bx-star'></i>
+                    <i class='bx bx-phone'></i>
                     <div>
-                        <p class="info-label">Rating</p>
-                        <p class="info-value" id="rating-value">Loading...</p>
+                        <p class="info-label">Phone</p>
+                        <p class="info-value" id="phone-value">Loading...</p>
                     </div>
                 </div>
                 <div class="info-item">
-                    <i class='bx bx-graduation'></i>
+                    <i class='bx bx-map'></i>
                     <div>
-                        <p class="info-label">Education</p>
-                        <p class="info-value" id="education-value">Loading...</p>
+                        <p class="info-label">Location</p>
+                        <p class="info-value" id="location-value">Loading...</p>
                     </div>
                 </div>
             </div>
-            <div class="bio-section">
-                <h3>Professional Bio</h3>
-                <p class="bio-text" id="bio-text">Loading bio...</p>
+
+            <!-- Professional Details Card -->
+            <div class="detail-card professional" id="professional-details" style="display: none;">
+                <h2 class="section-title">Professional Details</h2>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <i class='bx bx-briefcase'></i>
+                        <div>
+                            <p class="info-label">Experience</p>
+                            <p class="info-value" id="experience-value">Loading...</p>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <i class='bx bx-star'></i>
+                        <div>
+                            <p class="info-label">Rating</p>
+                            <p class="info-value" id="rating-value">Loading...</p>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <i class='bx bx-graduation'></i>
+                        <div>
+                            <p class="info-label">Education</p>
+                            <p class="info-value" id="education-value">Loading...</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bio-section">
+                    <h3>Professional Bio</h3>
+                    <p class="bio-text" id="bio-text">Loading bio...</p>
+                </div>
+            </div>
+
+            <!-- Supplier Details Card -->
+            <div class="detail-card supplier" id="supplier-details" style="display: none;">
+                <h2 class="section-title">Supplier Details</h2>
+                <div class="info-item">
+                    <i class='bx bx-buildings'></i>
+                    <div>
+                        <p class="info-label">Organization</p>
+                        <p class="info-value" id="supplier-org">Loading...</p>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <i class='bx bx-category'></i>
+                    <div>
+                        <p class="info-label">Products/Services</p>
+                        <p class="info-value" id="supplier-products">Loading...</p>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <i class='bx bx-certification'></i>
+                    <div>
+                        <p class="info-label">Certifications</p>
+                        <p class="info-value" id="supplier-certifications">Loading...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Center Details Card -->
+            <div class="detail-card center" id="center-details" style="display: none;">
+                <h2 class="section-title">Center Details</h2>
+                <div class="info-item">
+                    <i class='bx bx-clinic'></i>
+                    <div>
+                        <p class="info-label">Center Type</p>
+                        <p class="info-value" id="center-type">Loading...</p>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <i class='bx bx-map-pin'></i>
+                    <div>
+                        <p class="info-label">Address</p>
+                        <p class="info-value" id="center-address">Loading...</p>
+                    </div>
+                </div>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <i class='bx bx-time-five'></i>
+                        <div>
+                            <p class="info-label">Operating Hours</p>
+                            <p class="info-value" id="center-hours">Loading...</p>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <i class='bx bx-certification'></i>
+                        <div>
+                            <p class="info-label">Accreditations</p>
+                            <p class="info-value" id="center-accreditations">Loading...</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bio-section">
+                    <h3>Center Description</h3>
+                    <p class="bio-text" id="center-description">Loading...</p>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Add to users.html before the script tags -->
-<div class="rating-section" id="rating-section" style="display: none;">
-    <div class="rating-controls">
-        <div class="stars" id="stars">
-            <i class='bx bx-star' data-rating="1"></i>
-            <i class='bx bx-star' data-rating="2"></i>
-            <i class='bx bx-star' data-rating="3"></i>
-            <i class='bx bx-star' data-rating="4"></i>
-            <i class='bx bx-star' data-rating="5"></i>
+    <!-- Rating Section -->
+    <div class="rating-section" id="rating-section" style="display: none;">
+        <div class="rating-controls">
+            <div class="stars" id="stars">
+                <i class='bx bx-star' data-rating="1"></i>
+                <i class='bx bx-star' data-rating="2"></i>
+                <i class='bx bx-star' data-rating="3"></i>
+                <i class='bx bx-star' data-rating="4"></i>
+                <i class='bx bx-star' data-rating="5"></i>
+            </div>
+            <textarea id="rating-comment" placeholder="Add your review comment..." style="display: none;"></textarea>
+            <button id="submit-rating" style="display: none;">Submit Rating</button>
         </div>
-        <textarea id="rating-comment" placeholder="Add your review comment..." style="display: none;"></textarea>
-        <button id="submit-rating" style="display: none;">Submit Rating</button>
     </div>
-</div>
-
-<!-- users.html - auth-buttons section -->
-<div class="auth-buttons">
-    <li class="nav_item" id="logout-li" style="display: none;">
-        <button id="logout-btn">Logout</button>
-    </li>
+    
+    
+    <!-- Add this at the bottom of the user-profile-container div -->
+<div class="profile-footer" id="profile-footer" style="display: none;">
+    <div class="profile-views">
+        <i class='bx bx-show'></i>
+        <span>Profile Views: <span id="view-count">0</span></span>
+    </div>
+    <button id="profile-logout-btn" class="logout-btn">
+        <i class='bx bx-log-out'></i> Logout
+    </button>
 </div>
     
     <script src="https://www.gstatic.com/firebasejs/5.5.0/firebase.js"></script>
-<script src="assets/js/configuration.js"></script>
-<script src="assets/js/users.js"></script>
-
-<script src="assets/js/auth.js"></script>
-
+    <script src="assets/js/configuration.js"></script>
+    <script src="assets/js/users.js"></script>
+    <script src="assets/js/auth.js"></script>
 </body>
 </html>

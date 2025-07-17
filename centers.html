@@ -3,23 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Healthcare Professionals</title>
+    <title>All Centers | REHABVERVE</title>
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-    <link rel="stylesheet" href="assets/css/styles.css"> 
-    <link rel="stylesheet" href="assets/css/professionals.css"> 
-    </head>
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <link rel="stylesheet" href="assets/css/blogs.css">
+</head>
 <body>
     <header class="l-header">
-        <nav class="nav bd-grid">
+         <nav class="nav bd-grid">
             <div>
                 <h2><span class="home__title-color">REHAB</span>VERVE</h2>
             </div>
 
-           <div class="nav__menu" id="nav-menu">
+            <div class="nav__menu" id="nav-menu">
     <ul class="nav__list">
-         <li class="nav__item"><a href="index.html" class="nav__link">Home</a></li>
-       <li class="nav__item"><a href="#" class="nav__link active-link" id="active">Professionals</a></li>
-        <li class="nav__item"><a href="blogs.html" onclick="saveAppState()" class="nav__link">Centers</a></li>
+        <li class="nav__item"><a href="#home" class="nav__link">Home</a></li>
+        <li class="nav__item"><a href="professionals.html?category=All" onclick="saveAppState()" class="nav__link">Professionals</a></li>
+        <li class="nav__item"><a href="#" class="nav__link active-link" id="active">Centers</a></li>
         <li class="nav__item"><a href="marketplace.html" onclick="saveAppState()" class="nav__link">Marketplace</a></li>
         <li class="nav__item"><a href="tools.html" onclick="saveAppState()" class="nav__link">Tools</a></li>
         <li class="nav__item" id="my-profile-nav-item" style="display: none;"><a href="users.html?id=${user.uid}" onclick="saveAppState()" class="nav__link">My Profile</a></li>
@@ -39,36 +39,37 @@
         </nav>
     </header>
 
-    <!-- Add this right after the opening <main> tag -->
-<main class="l-main">
-    <section class="search-filter-section">
-        <div class="search-container">
-            <div class="nav__search">
-                <i class='bx bx-search nav__search-icon' id="search-icon"></i>
-                <input type="search" class="nav__search-input" id="search-input" placeholder="Search professionals...">
+    <main class="l-main">
+        <section class="blog-section">
+            <div class="blog-search-container">
+                <div class="nav__search">
+                    <i class='bx bx-search nav__search-icon' id="search-icon"></i>
+                    <input type="search" class="nav__search-input" id="center-search-input" placeholder="Search centers...">
+                </div>
+                <div class="filter-dropdown">
+                    <select id="category-filter" class="filter-select">
+                        <option value="All">All Categories</option>
+                        <option value="Rehabilitation Centers">Rehabilitation Centers</option>
+                        <option value="Schools">Schools</option>
+                        <option value="Hospitals">Hospitals</option>
+                        <option value="Homes">Homes</option>
+                    </select>
+                    <i class='bx bx-chevron-down filter-icon'></i>
+                </div>
             </div>
-        </div>
-        <div class="filter-container">
-            <div class="filter-dropdown">
-                <select id="category-filter" class="filter-select">
-                    <option value="All">All Categories</option>
-                    <option value="Physiotherapist">Physiotherapist</option>
-                    <option value="Occupational">Occupational Therapist</option>
-                    <option value="Speech">Speech Therapist</option>
-                    <option value="Psychologist">Psychologist</option>
-                </select>
-                <i class='bx bx-chevron-down filter-icon'></i>
+
+            <h2 class="section-title">Approved Centers Directory</h2>
+            <div class="blogs-container" id="centers-container">
+                <!-- Centers will be loaded here -->
+                <div class="loading-overlay">
+                    <div class="spinner"></div>
+                    <p>Loading centers...</p>
+                </div>
             </div>
-        </div>
-    </section>
+        </section>
+    </main>
     
-    <section class="professional-list section bd-grid">
-        
-        <div class="professional-grid"></div>
-    </section>
-</main>
-
-
+   
 <!-- Add this to your HTML -->
 <!-- Updated auth-modal -->
 <div id="auth-modal" class="modal">
@@ -102,7 +103,7 @@
 </div>
 
 
-  <footer class="modern-footer">
+    <footer class="modern-footer">
     <div class="footer-grid">
         <!-- Column 1: Brand Info -->
         <div class="footer-column">
@@ -162,7 +163,7 @@
     <script src="assets/js/configuration.js"></script>
     <script src="assets/js/mainload.js"></script>
     <script src="assets/js/auth.js"></script>
-    <script src="assets/js/main.js"></script> 
-    <script src="assets/js/professionals.js"></script> 
-     </body>
+    <script src="assets/js/main.js"></script>
+    <script src="assets/js/centers.js"></script>
+</body>
 </html>
