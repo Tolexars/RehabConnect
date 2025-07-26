@@ -58,9 +58,6 @@ function renderTools(tools) {
     toolCard.className = 'tool-card';
     
     toolCard.innerHTML = `
-      <div class="tool-image">
-        <img src="${tool.img || 'assets/img/default-tool.jpg'}" alt="${tool.title}">
-      </div>
       <div class="tool-content">
         <h3>${tool.title.substring(0, 50)}...</h3>
         <p>${tool.description.substring(0, 150) || 'Assessment tool for healthcare professionals'}...</p>
@@ -71,11 +68,11 @@ function renderTools(tools) {
         </div>
         <div class="tool-actions">
           <button class="btn btn-primary download-btn" data-id="${tool.push}">
-            <i class='bx bx-download'></i> Download
+            <i class='bx bx-show'></i> View
           </button>
           ${tool.pdfUrl ? `
           <button class="btn btn-secondary view-btn" data-url="${tool.pdfUrl}">
-            <i class='bx bx-show'></i> View
+            <i class='bx bx-download'></i> Download
           </button>` : ''}
         </div>
       </div>
