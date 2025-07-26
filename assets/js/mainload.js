@@ -414,11 +414,11 @@ function displayTools(toolsData) {
             const toolCard = document.createElement('div');
             toolCard.className = 'tool-card';
             toolCard.innerHTML = `
-                <img src="${tool.img}" alt="${tool.title}">
+                
                 <h3>${tool.title}</h3>
                 
                  <div class="tool-actions">
-          <button class="btn btn-primary download-btn" data-id="${tool.push}">
+          <button class="btn btn-secondary view-btn" data-url="${tool.pdfUrl}">
             <i class='bx bx-download'></i> Download
           </button>
           ${tool.pdfUrl ? `
