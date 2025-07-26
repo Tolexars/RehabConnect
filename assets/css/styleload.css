@@ -926,3 +926,46 @@ footer {
 .auth-switch a:hover {
     text-decoration: underline;
 }
+
+        /* Basic styling for the message container - highly recommend moving to styles.css */
+        #registration-status-message {
+            margin-top: 6rem;
+            margin-left: 10px;
+            margin-right: 10px;
+            margin-bottom: 6rem;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            background-color: #f9f9f9;
+            text-align: center;
+            font-family: Arial, sans-serif; /* Or your preferred font */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            max-width: 90%; /* Limit width for better readability */
+            min-height: 300px;
+            margin-left: auto;
+            margin-right: auto;
+            box-sizing: border-box; /* Include padding/border in element's total width/height */
+        }
+
+        #registration-status-message p {
+            font-size: 1.6em; /* Slightly larger for prominence */
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        #registration-status-message .whatsapp-button {
+            display: inline-block;
+            padding: 12px 25px;
+            background-color: #28a745; /* Green color for email button */
+            color: white;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 1.1em;
+            transition: background-color 0.3s ease;
+            cursor: pointer; /* Ensure cursor shows it's clickable */
+            border: none; /* Remove default button border */
+        }
+
+        #registration-status-message .whatsapp-button:hover {
+            background-color: #218838; /* Darker green on hover */
+        }
