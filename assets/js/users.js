@@ -2,9 +2,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
     const profileId = urlParams.get('id');
     let currentUser = null;
+    let currentProfileType = '';
+    let currentProfileData = null;
+    let newProfileImageUrl = '';
 
     const auth = firebase.auth();
     const database = firebase.database();
+    const storage = firebase.storage();
 
     // DOM Elements
     const profileImage = document.getElementById('profile-image');
@@ -85,6 +89,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const isProfessional = professionalSnap.exists();
         const isSupplier = supplierSnap.exists();
         const isCenter = centerSnap.exists();
+
+        // Set profile type and data for editing
+        if (isProfessional) {
+            currentProfileType = 'professional';
+            currentProfileData = professionalSnap.val();
+        } else if (isSupplier) {
+            currentProfileType = 'supplier';
+            const supplierRecords = supplierSnap.val();
+            const supplierKey = Object.keys(supplierRecords)[0];
+            currentProfileData = supplierRecords[supplierKey];
+        } else if (isCenter) {
+            currentProfileType = 'center';
+            currentProfileData = centerSnap.val();
+        }
 
         // Handle professional profile
         if (isProfessional) {
@@ -236,9 +254,7 @@ document.addEventListener('DOMContentLoaded', () => {
             currentUser = user;
             if (user && user.uid === profileId) {
                 editIcon.style.display = 'flex';
-                editIcon.addEventListener('click', () => {
-                    window.location.href = `profile.html?id=${profileId}`;
-                });
+                editIcon.addEventListener('click', showEditModal);
             }
         });
         
@@ -261,6 +277,215 @@ document.addEventListener('DOMContentLoaded', () => {
                 viewsRef.set(0);
             }
         });
+    }
+
+    // Show edit profile modal
+    function showEditModal() {
+        const modal = document.getElementById('edit-profile-modal');
+        modal.style.display = 'block';
+        
+        // Hide all specialized fields initially
+        document.getElementById('professional-fields').style.display = 'none';
+        document.getElementById('supplier-fields').style.display = 'none';
+        document.getElementById('center-fields').style.display = 'none';
+        
+        // Hide progress and messages
+        document.getElementById('image-upload-progress').style.display = 'none';
+        document.getElementById('edit-success').style.display = 'none';
+        document.getElementById('edit-error').textContent = '';
+        
+        // Populate common fields
+        document.getElementById('edit-name').value = userName.textContent;
+        document.getElementById('edit-phone').value = phoneValue.textContent;
+        
+        // Populate specialized fields based on profile type
+        if (currentProfileType === 'professional') {
+            document.getElementById('professional-fields').style.display = 'block';
+            document.getElementById('edit-title').value = userTitle.textContent;
+            document.getElementById('edit-specialty').value = currentProfileData.education || '';
+            document.getElementById('edit-experience').value = currentProfileData.experience || '';
+            document.getElementById('edit-bio').value = currentProfileData.bio || '';
+        } 
+        
+        else if (currentProfileType === 'supplier') {
+            document.getElementById('supplier-fields').style.display = 'block';
+            document.getElementById('edit-org').value = orgName.textContent;
+            document.getElementById('edit-products').value = currentProfileData.productsOffered || '';
+        } 
+        
+        else if (currentProfileType === 'center') {
+            document.getElementById('center-fields').style.display = 'block';
+            document.getElementById('edit-center-name').value = currentProfileData.centerName || '';
+            document.getElementById('edit-center-type').value = currentProfileData.centerType || '';
+            document.getElementById('edit-address').value = currentProfileData.address || '';
+            document.getElementById('edit-description').value = currentProfileData.description || '';
+        }
+    }
+
+    // Hide edit modal
+    function hideEditModal() {
+        document.getElementById('edit-profile-modal').style.display = 'none';
+    }
+
+    // Upload profile image with progress
+    async function uploadProfileImage(file, userId) {
+        const progressContainer = document.getElementById('image-upload-progress');
+        const progressBar = progressContainer.querySelector('.progress-bar');
+        const progressText = progressContainer.querySelector('.progress-text');
+        
+        progressContainer.style.display = 'block';
+        
+        try {
+            // Check file size
+            if (file.size > 2 * 1024 * 1024) {
+                throw new Error('Image file size exceeds 2MB limit.');
+            }
+            
+            // Check file type
+            const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+            if (!allowedTypes.includes(file.type)) {
+                throw new Error('Only JPG, PNG, GIF images are allowed.');
+            }
+            
+            // Upload to storage
+            const storageRef = storage.ref(`profile-images/${userId}/${Date.now()}_${file.name}`);
+            const uploadTask = storageRef.put(file);
+            
+            // Listen for upload progress
+            uploadTask.on('state_changed', 
+                (snapshot) => {
+                    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                    progressBar.style.width = `${progress}%`;
+                    progressText.textContent = `Uploading: ${Math.round(progress)}%`;
+                },
+                (error) => {
+                    throw error;
+                },
+                async () => {
+                    // Get download URL
+                    newProfileImageUrl = await uploadTask.snapshot.ref.getDownloadURL();
+                    progressText.textContent = 'Upload complete!';
+                    
+                    // Update userdata reference with the new image URL
+                    await database.ref(`userdata/${userId}`).update({
+                        img: newProfileImageUrl
+                    });
+                    
+                    await database.ref(`professionals/${userId}`).update({
+                        img: newProfileImageUrl
+                    });
+                    
+                    // Update profile image immediately
+                    profileImage.src = newProfileImageUrl;
+                    
+                    // Hide progress after a delay
+                    setTimeout(() => {
+                        progressContainer.style.display = 'none';
+                    }, 2000);
+                }
+            );
+            
+            return newProfileImageUrl;
+        } catch (error) {
+            showError('edit-error', error.message);
+            progressContainer.style.display = 'none';
+            return null;
+        }
+    }
+
+    // Save profile changes
+    async function saveProfileChanges() {
+        const userId = currentUser.uid;
+        const name = document.getElementById('edit-name').value;
+        const phone = document.getElementById('edit-phone').value;
+        
+        // Get file input
+        const fileInput = document.getElementById('edit-profile-image');
+        const file = fileInput.files[0];
+        
+        try {
+            // Validate inputs
+            if (!name.trim()) throw new Error('Name is required');
+            if (!phone.trim()) throw new Error('Phone is required');
+            
+            // Upload image if selected
+            if (file) {
+                await uploadProfileImage(file, userId);
+            }
+            
+            // Update common user data
+            await database.ref(`userdata/${userId}`).update({
+                name: name,
+                phone: phone
+            });
+            
+            // Update specialized data based on profile type
+            if (currentProfileType === 'professional') {
+                const updateData = {
+                    name: name,
+                    phone: phone,
+                    education: document.getElementById('edit-specialty').value,
+                    experience: parseInt(document.getElementById('edit-experience').value) || 0,
+                    bio: document.getElementById('edit-bio').value
+                };
+                
+                await database.ref(`professionals/${userId}`).update(updateData);
+            } 
+            else if (currentProfileType === 'supplier') {
+                const updateData = {
+                    orgName: document.getElementById('edit-org').value,
+                    contactPhone: phone,
+                    productsOffered: document.getElementById('edit-products').value
+                };
+                
+                // Find supplier key and update
+                const suppliersSnapshot = await database.ref('merchants').orderByChild('userId').equalTo(userId).once('value');
+                if (suppliersSnapshot.exists()) {
+                    const supplierKey = Object.keys(suppliersSnapshot.val())[0];
+                    await database.ref(`merchants/${supplierKey}`).update(updateData);
+                }
+            } 
+            else if (currentProfileType === 'center') {
+                const updateData = {
+                    centerName: document.getElementById('edit-center-name').value,
+                    contactPhone: phone,
+                    centerType: document.getElementById('edit-center-type').value,
+                    address: document.getElementById('edit-address').value,
+                    description: document.getElementById('edit-description').value
+                };
+                
+                await database.ref(`centers/${userId}`).update(updateData);
+            }
+            
+            // Update UI immediately
+            userName.textContent = name;
+            phoneValue.textContent = phone;
+            
+            // Show success message
+            document.getElementById('edit-success').style.display = 'block';
+            document.getElementById('edit-error').textContent = '';
+            
+            // Hide modal after 2 seconds
+            setTimeout(hideEditModal, 2000);
+            
+        } catch (error) {
+            showError('edit-error', error.message);
+        }
+    }
+
+    // Setup edit modal functionality
+    function setupEditModal() {
+        // Modal close button
+        document.querySelector('#edit-profile-modal .modal-close').addEventListener('click', hideEditModal);
+        
+        // Close modal when clicking outside
+        window.addEventListener('click', (e) => {
+            const modal = document.getElementById('edit-profile-modal');
+            if (e.target === modal) hideEditModal();
+        });
+        
+        // Save button
+        document.getElementById('save-profile-btn').addEventListener('click', saveProfileChanges);
     }
 
     // Online status tracking
@@ -392,6 +617,16 @@ document.addEventListener('DOMContentLoaded', () => {
         submitButton.style.display = 'none';
     }
 
+    // Helper function to show errors
+    function showError(elementId, message) {
+        const errorElement = document.getElementById(elementId);
+        if (errorElement) {
+            errorElement.textContent = message;
+            errorElement.style.display = message ? 'block' : 'none';
+        }
+    }
+
     // Initialize
     initializeProfile();
+    setupEditModal();
 });

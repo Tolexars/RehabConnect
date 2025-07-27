@@ -8,9 +8,17 @@ function initializeApp() {
         if (user) {
             if (DEBUG) console.log("User authenticated:", user.uid);
             await handleAuthenticatedState(user);
+            
+            // Hide Join our Network section for logged-in users
+            const joinSection = document.querySelector('.join-practitioner22');
+            if (joinSection) joinSection.style.display = 'none';
         } else {
             if (DEBUG) console.log("User not authenticated");
             handleUnauthenticatedState();
+            
+            // Show Join our Network section for logged-out users
+            const joinSection = document.querySelector('.join-practitioner22');
+            if (joinSection) joinSection.style.display = 'block';
         }
     });
 
@@ -200,8 +208,6 @@ function setupAuthForms() {
             e.preventDefault();
             showError('login-error', '');
             
-            
-
             const email = loginForm['login-email'].value;
             const password = loginForm['login-password'].value;
 
@@ -495,6 +501,10 @@ async function handleAuthenticatedState(user) {
     const myProfileNavItem = document.getElementById('my-profile-nav-item');
     const myMobileProfileNavItem = document.getElementById('mobile-profile-nav');
     const navMenu = document.getElementById('nav-menu');
+    
+    // Hide Join our Network section
+    const joinSection = document.querySelector('.join-practitioner22');
+    if (joinSection) joinSection.style.display = 'none';
 
     if (loginBtn) loginBtn.style.display = 'none';
 
@@ -560,6 +570,10 @@ async function handleAuthenticatedState(user) {
 
 function handleUnauthenticatedState() {
     if (DEBUG) console.log("Handling unauthenticated state.");
+    
+    // Show Join our Network section
+    const joinSection = document.querySelector('.join-practitioner22');
+    if (joinSection) joinSection.style.display = 'block';
 
     const loginBtn = document.getElementById('login-btn');
     const logoutBtn = document.getElementById('logout-btn');
