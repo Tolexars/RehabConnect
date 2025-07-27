@@ -95,7 +95,7 @@
                     <div class="info-item">
                         <i class='bx bx-graduation'></i>
                         <div>
-                            <p class="info-label">Education</p>
+                            <p class="info-label">Qualification(s)</p>
                             <p class="info-value" id="education-value">Loading...</p>
                         </div>
                     </div>
@@ -198,6 +198,95 @@
     <button id="profile-logout-btn" class="logout-btn">
         <i class='bx bx-log-out'></i> Logout
     </button>
+</div>
+
+<!-- Add this before the closing </body> tag -->
+<div id="edit-profile-modal" class="modal">
+    <div class="modal-content">
+        <span class="modal-close">&times;</span>
+        <h2>Edit Profile</h2>
+        
+        <!-- Profile Image Upload -->
+        <div class="form-group">
+            <label for="edit-profile-image">Profile Image</label>
+            <input type="file" id="edit-profile-image" accept="image/*">
+            <div class="upload-progress" id="image-upload-progress" style="display: none;">
+                <div class="progress-bar"></div>
+                <span class="progress-text">Uploading: 0%</span>
+            </div>
+        </div>
+        
+        <!-- Common Fields -->
+        <div class="form-group">
+            <label for="edit-name">Full Name</label>
+            <input type="text" id="edit-name" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="edit-phone">Phone</label>
+            <input type="tel" id="edit-phone" required>
+        </div>
+        
+        <!-- Professional Fields -->
+        <div id="professional-fields" style="display: none;">
+            <div class="form-group">
+                <label for="edit-title">Professional Title</label>
+                <input type="text" id="edit-title">
+            </div>
+            <div class="form-group">
+                <label for="edit-specialty">Qualifications</label>
+                <input type="text" id="edit-specialty">
+            </div>
+            <div class="form-group">
+                <label for="edit-experience">Experience (years)</label>
+                <input type="number" id="edit-experience" min="0">
+            </div>
+            <div class="form-group">
+                <label for="edit-bio">Professional Bio</label>
+                <textarea id="edit-bio" rows="4"></textarea>
+            </div>
+        </div>
+        
+        <!-- Supplier Fields -->
+        <div id="supplier-fields" style="display: none;">
+            <div class="form-group">
+                <label for="edit-org">Organization Name</label>
+                <input type="text" id="edit-org">
+            </div>
+            <div class="form-group">
+                <label for="edit-products">Products/Services</label>
+                <textarea id="edit-products" rows="3"></textarea>
+            </div>
+        </div>
+        
+        <!-- Center Fields -->
+        <div id="center-fields" style="display: none;">
+            <div class="form-group">
+                <label for="edit-center-name">Center Name</label>
+                <input type="text" id="edit-center-name">
+            </div>
+            <div class="form-group">
+                <label for="edit-center-type">Center Type</label>
+                <input type="text" id="edit-center-type">
+            </div>
+            <div class="form-group">
+                <label for="edit-address">Address</label>
+                <textarea id="edit-address" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="edit-description">Description</label>
+                <textarea id="edit-description" rows="4"></textarea>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <button id="save-profile-btn">Save Changes</button>
+            <div id="edit-error" class="error-message"></div>
+            <div id="edit-success" class="success-message" style="display: none;">
+                Profile updated successfully!
+            </div>
+        </div>
+    </div>
 </div>
     
     <script src="https://www.gstatic.com/firebasejs/5.5.0/firebase.js"></script>
