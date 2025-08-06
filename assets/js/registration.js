@@ -1,4 +1,4 @@
-// registration.js - Complete Implementation with Dynamic Section Visibility and Status Messages
+// registration.js - Complete Implementation with Dynamic Section Visibility, Loading, and Redirection
 
 const DEBUG = true; // Set to true for console logs, false to disable
 
@@ -309,6 +309,7 @@ function setupPractitionerForm() {
         practitionerForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             showError('practitioner-error', '');
+            showLoading(); // Show loading overlay
 
             const fullName = practitionerForm['prof-name'].value;
             const email = practitionerForm['prof-email'].value;
@@ -317,10 +318,12 @@ function setupPractitionerForm() {
             const specialty = practitionerForm['prof-specialty'].value;
             const yearsExperience = parseInt(practitionerForm['prof-experience'].value, 10);
             const bio = practitionerForm['prof-bio'].value;
-            const fileInput = practitionerForm['prof-picture'];
-            const file = fileInput.files[0];
-            let imageUrl = '';
-            let user = null; // Initialize user as null
+            const licenseFile = practitionerForm['prof-license'].files[0];
+            const profilePictureFile = practitionerForm['prof-picture'].files[0];
+            
+            let profileImageUrl = '';
+            let licenseUrl = '';
+            let user = null;
 
             try {
                 // 1. Create User Account
@@ -328,37 +331,63 @@ function setupPractitionerForm() {
                 user = userCredential.user;
                 if (DEBUG) console.log("Practitioner account created with UID:", user.uid);
 
-                // 2. Upload Profile Picture (if provided)
-                if (file) {
-                    if (file.size > 2 * 1024 * 1024) {
-                        showError('practitioner-error', 'Image file size exceeds 2MB limit.');
-                        await deleteUserAccount(user); // Attempt to delete partially created user
+                // 2. Validate and Upload License File (required)
+                if (licenseFile) {
+                    if (licenseFile.size > 5 * 1024 * 1024) { // 5MB limit
+                        showError('practitioner-error', 'License file size exceeds 5MB limit.');
+                        await deleteUserAccount(user);
+                        hideLoading();
                         return;
                     }
-                    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
-                    if (!allowedTypes.includes(file.type)) {
-                        showError('practitioner-error', 'Only JPG, PNG, GIF images are allowed.');
-                        await deleteUserAccount(user); // Attempt to delete partially created user
+                    const allowedFileTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+                    if (!allowedFileTypes.includes(licenseFile.type)) {
+                        showError('practitioner-error', 'Only JPG, PNG, GIF, PDF, DOC, and DOCX files are allowed for licenses.');
+                        await deleteUserAccount(user);
+                        hideLoading();
                         return;
                     }
-
-                    const storageRef = storage.ref('profile_pictures/' + user.uid + '/' + file.name);
-                    const snapshot = await storageRef.put(file);
-                    imageUrl = await snapshot.ref.getDownloadURL();
-                    if (DEBUG) console.log("Profile picture uploaded:", imageUrl);
+                    const licenseStorageRef = storage.ref('practitioner_licenses/' + user.uid + '/' + licenseFile.name);
+                    const licenseSnapshot = await licenseStorageRef.put(licenseFile);
+                    licenseUrl = await licenseSnapshot.ref.getDownloadURL();
+                    if (DEBUG) console.log("Professional license uploaded:", licenseUrl);
+                } else {
+                    showError('practitioner-error', 'A professional license is required for registration.');
+                    await deleteUserAccount(user);
+                    hideLoading();
+                    return;
                 }
 
-                // 3. Save User Data (role: practitioner)
+                // 3. Upload Profile Picture (if provided)
+                if (profilePictureFile) {
+                    if (profilePictureFile.size > 2 * 1024 * 1024) { // 2MB limit
+                        showError('practitioner-error', 'Profile picture file size exceeds 2MB limit.');
+                        hideLoading();
+                        // Note: We don't delete the user here, just return to prevent saving.
+                        return;
+                    }
+                    const allowedImageTypes = ['image/jpeg', 'image/png', 'image/gif'];
+                    if (!allowedImageTypes.includes(profilePictureFile.type)) {
+                        showError('practitioner-error', 'Only JPG, PNG, GIF images are allowed for profile pictures.');
+                        hideLoading();
+                        return;
+                    }
+                    const profileStorageRef = storage.ref('profile_pictures/' + user.uid + '/' + profilePictureFile.name);
+                    const snapshot = await profileStorageRef.put(profilePictureFile);
+                    profileImageUrl = await snapshot.ref.getDownloadURL();
+                    if (DEBUG) console.log("Profile picture uploaded:", profileImageUrl);
+                }
+
+                // 4. Save User Data (role: practitioner)
                 await database.ref('userdata/' + user.uid).set({
                     name: fullName,
                     email: email,
                     role: 'practitioner',
-                    img: imageUrl, // Store profile image URL
+                    img: profileImageUrl, // Store profile image URL
                     createdAt: firebase.database.ServerValue.TIMESTAMP
                 });
                 if (DEBUG) console.log("User data saved for practitioner.");
 
-                // 4. Save Practitioner Application Data
+                // 5. Save Practitioner Application Data
                 const practitionerData = {
                     fullName: fullName,
                     contactEmail: email,
@@ -366,7 +395,8 @@ function setupPractitionerForm() {
                     specialty: specialty,
                     yearsExperience: yearsExperience,
                     bio: bio,
-                    img: imageUrl, // Store image URL in application too
+                    licenseUrl: licenseUrl, // Store license file URL
+                    img: profileImageUrl, // Store profile image URL in application too
                     userId: user.uid,
                     timestamp: firebase.database.ServerValue.TIMESTAMP,
                     status: 'pending', // Application status
@@ -375,20 +405,14 @@ function setupPractitionerForm() {
                 await database.ref('applications').push(practitionerData); // Submit to applications
                 if (DEBUG) console.log("Practitioner application submitted.");
 
-                alert('Your professional account has been created and application submitted successfully! You are now logged in and we will review your application shortly.');
-                hideAllModals();
-                practitionerForm.reset();
-
-                // Hide the practitioner section after successful registration (handled by handleAuthenticatedState)
-                // const joinPractitionerSection = document.querySelector('.join-practitioner');
-                // if (joinPractitionerSection) joinPractitionerSection.style.display = 'none';
-
-                // Redirect to the previous page
-                redirectToPreviousPage();
+                // Show success message and redirect
+                showSuccessMessage('practitioner-modal');
+                hideLoading();
 
             } catch (error) {
                 if (DEBUG) console.error("Practitioner registration/submission failed:", error.message);
                 showError('practitioner-error', 'Registration failed: ' + error.message);
+                hideLoading();
                 // If user creation succeeded but subsequent steps failed, try to delete the user
                 if (user) {
                     await deleteUserAccount(user);
@@ -406,13 +430,14 @@ function setupSupplierForm() {
         supplierForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             showError('supplier-error', '');
+            showLoading(); // Show loading overlay
 
             const orgName = supplierForm['org-name'].value;
             const contactEmail = supplierForm['contact-email'].value;
             const password = supplierForm['supplier-password'].value;
             const contactPhone = supplierForm['contact-phone'].value;
             const productsOffered = supplierForm['products-offered'].value;
-            let user = null; // Initialize user as null
+            let user = null;
 
             try {
                 // 1. Create User Account
@@ -443,20 +468,14 @@ function setupSupplierForm() {
                 await database.ref('applications').push(supplierData); // Submit to applications
                 if (DEBUG) console.log("Supplier application submitted.");
 
-                alert('Your supplier account has been created and application submitted successfully! You are now logged in.');
-                hideAllModals();
-                supplierForm.reset();
-
-                // Hide the supplier section after successful registration (handled by handleAuthenticatedState)
-                // const supplierSection = document.querySelector('.become-supplier');
-                // if (supplierSection) supplierSection.style.display = 'none';
-
-                // Redirect to the previous page
-                redirectToPreviousPage();
+                // Show success message and redirect
+                showSuccessMessage('supplier-modal');
+                hideLoading();
 
             } catch (error) {
                 if (DEBUG) console.error("Supplier registration/submission failed:", error.message);
                 showError('supplier-error', 'Registration failed: ' + error.message);
+                hideLoading();
                 if (user) {
                     await deleteUserAccount(user);
                 }
@@ -473,6 +492,7 @@ function setupCenterForm() {
         centerForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             showError('center-error', '');
+            showLoading(); // Show loading overlay
 
             const centerName = centerForm['center-name'].value;
             const centerType = centerForm['center-type'].value;
@@ -485,7 +505,7 @@ function setupCenterForm() {
             const fileInput = centerForm['center-logo'];
             const file = fileInput.files[0];
             let imageUrl = '';
-            let user = null; // Initialize user as null
+            let user = null;
 
             try {
                 // 1. Create User Account
@@ -498,12 +518,14 @@ function setupCenterForm() {
                     if (file.size > 2 * 1024 * 1024) {
                         showError('center-error', 'Logo file size exceeds 2MB limit.');
                         await deleteUserAccount(user); // Attempt to delete partially created user
+                        hideLoading();
                         return;
                     }
                     const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
                     if (!allowedTypes.includes(file.type)) {
                         showError('center-error', 'Only JPG, PNG, GIF images are allowed.');
                         await deleteUserAccount(user); // Attempt to delete partially created user
+                        hideLoading();
                         return;
                     }
 
@@ -541,20 +563,14 @@ function setupCenterForm() {
                 await database.ref('applications').push(centerData); // Submit to applications
                 if (DEBUG) console.log("Center application submitted.");
 
-                alert('Your center account has been created and registration submitted successfully! You are now logged in and we will review your registration shortly.');
-                hideAllModals();
-                centerForm.reset();
-
-                // Hide the center section after successful registration (handled by handleAuthenticatedState)
-                // const centerSection = document.querySelector('.my-center');
-                // if (centerSection) centerSection.style.display = 'none';
-
-                // Redirect to the previous page
-                redirectToPreviousPage();
+                // Show success message and redirect
+                showSuccessMessage('center-modal');
+                hideLoading();
 
             } catch (error) {
                 if (DEBUG) console.error("Center registration/submission failed:", error.message);
                 showError('center-error', 'Registration failed: ' + error.message);
+                hideLoading();
                 if (user) {
                     await deleteUserAccount(user);
                 }
@@ -564,6 +580,46 @@ function setupCenterForm() {
 }
 
 // --- Helper Functions ---
+
+/**
+ * Shows a loading overlay.
+ */
+function showLoading() {
+    const loadingOverlay = document.getElementById('loading-overlay');
+    if (loadingOverlay) {
+        loadingOverlay.style.display = 'flex';
+    }
+}
+
+/**
+ * Hides the loading overlay.
+ */
+function hideLoading() {
+    const loadingOverlay = document.getElementById('loading-overlay');
+    if (loadingOverlay) {
+        loadingOverlay.style.display = 'none';
+    }
+}
+
+/**
+ * Displays a success message and redirects after a delay.
+ * @param {string} modalId - The ID of the modal to hide.
+ */
+function showSuccessMessage(modalId) {
+    const registrationStatusMessage = document.getElementById('registration-status-message');
+    const modal = document.getElementById(modalId);
+
+    if (registrationStatusMessage && modal) {
+        modal.style.display = 'none'; // Hide the form modal
+        registrationStatusMessage.innerHTML = '<h2>Application Successful!</h2><p>Thank you for registering. You will be contacted shortly.</p>';
+        registrationStatusMessage.style.display = 'block';
+
+        // Redirect back to the previous page after 3 seconds
+        setTimeout(() => {
+            window.history.back();
+        }, 3000);
+    }
+}
 
 // Handles redirection to the previous page
 function redirectToPreviousPage() {
