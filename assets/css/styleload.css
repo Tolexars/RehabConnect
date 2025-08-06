@@ -827,7 +827,7 @@ footer {
 
 .regular-user .whatsapp-button {
     background: linear-gradient(135deg, #00BCD4, #4CAF50);
-    box-shadow: 0 4px 15px linear-gradient(135deg, #00a5bb, #2c6db5);
+    box-shadow: 0 4-box-shadow: 0 4px 15px linear-gradient(135deg, #00a5bb, #2c6db5);
 }
 
 .whatsapp-button:hover {
@@ -880,15 +880,22 @@ footer {
     max-width: 700px;
 }
 
-#center-modal .form-group select {
+.form-group select {
     width: 100%;
     padding: 12px;
     border: 1px solid #ddd;
     border-radius: 8px;
     font-size: 1rem;
+    box-sizing: border-box; /* Ensures padding doesn't affect width */
+    -webkit-appearance: none; /* Remove default arrow on WebKit browsers */
+    -moz-appearance: none; /* Remove default arrow on Firefox */
+    appearance: none; /* Remove default arrow */
+    background-color: #fff;
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23000%22%20d%3D%22M287%20164.7c-4.7%204.7-12.3%204.7-17%200L146.2%2031.5%2022.4%20164.7c-4.7%204.7-12.3%204.7-17%200-4.7-4.7-4.7-12.3%200-17l132.8-132.8c4.7-4.7%2012.3-4.7%2017%200l132.8%20132.8c4.7%204.7%204.7%2012.3%200%2017z%22%2F%3E%3C%2Fsvg%3E'); /* Custom arrow */
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 12px;
 }
-
-
 
 @media (min-width: 768px) {
     .join-practitioner, .my-center, .become-supplier {
@@ -969,3 +976,31 @@ footer {
         #registration-status-message .whatsapp-button:hover {
             background-color: #218838; /* Darker green on hover */
         }
+
+
+#loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.spinner {
+    border: 8px solid #f3f3f3;
+    border-top: 8px solid #3498db;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
