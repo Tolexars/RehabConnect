@@ -127,6 +127,11 @@
                 <input type="file" id="center-logo" accept="image/*">
                 <small>Max file size: 2MB. JPG, PNG, GIF allowed.</small>
             </div>
+            
+            <div id="loading-overlay" style="display:none;">
+    <div class="spinner"></div>
+</div>
+
 
             <button type="submit">Submit Registration</button>
         </form>
@@ -158,6 +163,11 @@
                 <label>Products Offered:</label>
                 <textarea id="products-offered" rows="3" required></textarea>
             </div>
+            
+           <div id="loading-overlay" style="display:none;">
+    <div class="spinner"></div>
+</div>
+
             <button type="submit">Submit Application</button>
         </form>
     </div>
@@ -194,7 +204,23 @@
 
             <div class="form-group">
                 <label for="prof-specialty">Specialty/Profession:</label>
-                <input type="text" id="prof-specialty" placeholder="e.g., Physiotherapist, Occupational Therapist" required>
+                <select id="prof-specialty" required>
+                    <option value="">Select Specialty</option>
+                    <option value="Consultant">Consultant</option>
+                    <option value="Doctor">Doctor</option>
+                    <option value="Nurses">Nurses</option>
+                    <option value="Occupational Therapist">Occupational Therapist</option>
+                    <option value="Physiotherapist">Physiotherapist</option>
+                    <option value="Psychologists">Psychologists</option>
+                    <option value="Speech Therapist">Speech Therapist</option>
+                    <option value="Prosthesis and Orthosis">Prosthesis and Orthosis</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="prof-license">Upload Professional License:</label>
+                <input type="file" id="prof-license" accept=".jpg, .jpeg, .png, .gif, .pdf, .doc, .docx" required>
+                <small>Max file size: 5MB. JPG, PNG, GIF, PDF, DOCX allowed.</small>
             </div>
 
             <div class="form-group">
@@ -212,6 +238,11 @@
                 <input type="file" id="prof-picture" accept="image/*">
                 <small>Max file size: 2MB. JPG, PNG, GIF allowed.</small>
             </div>
+            
+            <div id="loading-overlay" style="display:none;">
+    <div class="spinner"></div>
+</div>
+
 
             <button type="submit">Apply to Join</button>
         </form>
