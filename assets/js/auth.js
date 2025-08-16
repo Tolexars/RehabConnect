@@ -168,6 +168,32 @@ function setupEventListeners() {
             }
         });
     }
+
+    // Auth tab switching
+    document.getElementById('show-register')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        switchToRegisterForm();
+    });
+
+    document.getElementById('show-login')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        switchToLoginForm();
+    });
+}
+
+// Auth tab switching functions
+function switchToLoginForm() {
+    document.querySelector('.auth-tab[data-form="register"]').classList.remove('active');
+    document.querySelector('.auth-tab[data-form="login"]').classList.add('active');
+    document.getElementById('register-form').classList.remove('active');
+    document.getElementById('login-form').classList.add('active');
+}
+
+function switchToRegisterForm() {
+    document.querySelector('.auth-tab[data-form="login"]').classList.remove('active');
+    document.querySelector('.auth-tab[data-form="register"]').classList.add('active');
+    document.getElementById('login-form').classList.remove('active');
+    document.getElementById('register-form').classList.add('active');
 }
 
 // Modal Management
@@ -186,6 +212,8 @@ function hideAllModals() {
         if (modal.id === 'auth-modal') {
             document.getElementById('login-form').reset();
             showError('login-error', '');
+            document.getElementById('register-form').reset();
+            showError('register-error', '');
         } else if (modal.id === 'supplier-modal') {
             document.getElementById('supplier-form').reset();
             showError('supplier-error', '');
@@ -197,16 +225,55 @@ function hideAllModals() {
             showError('center-error', '');
         }
     });
+    
+    // Hide any spinners that might be visible
+    hideAuthSpinner();
+}
+
+// Show/hide auth spinner
+function showAuthSpinner() {
+    const spinner = document.getElementById('auth-spinner');
+    if (!spinner) {
+        // Create spinner if it doesn't exist
+        const spinnerDiv = document.createElement('div');
+        spinnerDiv.id = 'auth-spinner';
+        spinnerDiv.className = 'spinner';
+        spinnerDiv.style.cssText = 'border: 4px solid rgba(0,0,0,0.1); border-top: 4px solid #00BCD4; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto;';
+        document.querySelector('.modal-content').appendChild(spinnerDiv);
+    } else {
+        spinner.style.display = 'block';
+    }
+}
+
+function hideAuthSpinner() {
+    const spinner = document.getElementById('auth-spinner');
+    if (spinner) {
+        spinner.style.display = 'none';
+    }
 }
 
 // Auth Forms
 function setupAuthForms() {
     if (DEBUG) console.log("Setting up auth forms...");
+    
+    // Auth tab switching
+    document.querySelectorAll('.auth-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            const formToShow = tab.dataset.form;
+            document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+            
+            tab.classList.add('active');
+            document.getElementById(`${formToShow}-form`).classList.add('active');
+        });
+    });
+
     const loginForm = document.getElementById('login-form');
     if (loginForm) {
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             showError('login-error', '');
+            showAuthSpinner();
             
             const email = loginForm['login-email'].value;
             const password = loginForm['login-password'].value;
@@ -214,6 +281,7 @@ function setupAuthForms() {
             try {
                 await auth.signInWithEmailAndPassword(email, password);
                 if (DEBUG) console.log("Login successful!");
+                hideAuthSpinner();
                 
                 // Handle post-login redirect
                 const redirectTarget = sessionStorage.getItem('postAuthRedirect');
@@ -224,8 +292,54 @@ function setupAuthForms() {
                     handlePostLogin();
                 }
             } catch (error) {
+                hideAuthSpinner();
                 if (DEBUG) console.error("Login error:", error.message);
                 showError('login-error', error.message);
+            }
+        });
+    }
+
+    const registerForm = document.getElementById('register-form');
+    if (registerForm) {
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            showError('register-error', '');
+            showAuthSpinner();
+
+            const name = registerForm['register-name'].value;
+            const email = registerForm['register-email'].value;
+            const password = registerForm['register-password'].value;
+
+            try {
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+
+                // Save user data to database (role: regular)
+                await database.ref('userdata/' + user.uid).set({
+                    name: name,
+                    email: email,
+                    role: 'regular',
+                    createdAt: firebase.database.ServerValue.TIMESTAMP
+                });
+
+                hideAuthSpinner();
+                if (DEBUG) console.log("Registration successful! User:", user.uid);
+                hideAllModals();
+                alert('Account created successfully! You are now logged in.');
+
+                // Handle post-registration redirect
+                const redirectTarget = sessionStorage.getItem('postAuthRedirect');
+                if (redirectTarget === 'ai-assistant') {
+                    sessionStorage.removeItem('postAuthRedirect');
+                    window.location.href = '/ai-assistant/';
+                } else {
+                    // Redirect to the previous page
+                    redirectToPreviousPage();
+                }
+            } catch (error) {
+                hideAuthSpinner();
+                if (DEBUG) console.error("Registration error:", error.message);
+                showError('register-error', error.message);
             }
         });
     }
@@ -239,9 +353,11 @@ function setupPractitionerForm() {
         practitionerForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             showError('practitioner-error', '');
+            showLoading();
 
             const user = auth.currentUser;
             if (!user) {
+                hideLoading();
                 showError('practitioner-error', 'You must be logged in to submit this form.');
                 return;
             }
@@ -249,6 +365,7 @@ function setupPractitionerForm() {
             // Check for existing applications
             const hasExistingApp = await checkExistingApplications(user.uid);
             if (hasExistingApp) {
+                hideLoading();
                 showError('practitioner-error', 'You already have an application submitted.');
                 return;
             }
@@ -259,11 +376,13 @@ function setupPractitionerForm() {
 
             if (file) {
                 if (file.size > 2 * 1024 * 1024) {
+                    hideLoading();
                     showError('practitioner-error', 'Image file size exceeds 2MB limit.');
                     return;
                 }
                 const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
                 if (!allowedTypes.includes(file.type)) {
+                    hideLoading();
                     showError('practitioner-error', 'Only JPG, PNG, GIF images are allowed.');
                     return;
                 }
@@ -278,6 +397,7 @@ function setupPractitionerForm() {
                         img: imageUrl
                     });
                 } catch (error) {
+                    hideLoading();
                     if (DEBUG) console.error("Image upload error:", error.message);
                     showError('practitioner-error', 'Failed to upload image: ' + error.message);
                     return;
@@ -300,12 +420,14 @@ function setupPractitionerForm() {
 
             try {
                 await database.ref('applications').push(practitionerData);
+                hideLoading();
                 alert('Your professional application has been submitted successfully! We will review it shortly.');
                 hideAllModals();
                 practitionerForm.reset();
                 const joinPractitionerSection = document.querySelector('.join-practitioner');
                 if (joinPractitionerSection) joinPractitionerSection.style.display = 'none';
             } catch (error) {
+                hideLoading();
                 if (DEBUG) console.error("Practitioner submission failed:", error.message);
                 showError('practitioner-error', 'Submission failed: ' + error.message);
             }
@@ -321,9 +443,11 @@ function setupSupplierForm() {
         supplierForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             showError('supplier-error', '');
+            showLoading();
 
             const user = auth.currentUser;
             if (!user) {
+                hideLoading();
                 showError('supplier-error', 'You must be logged in to submit this form.');
                 return;
             }
@@ -331,6 +455,7 @@ function setupSupplierForm() {
             // Check for existing applications
             const hasExistingApp = await checkExistingApplications(user.uid);
             if (hasExistingApp) {
+                hideLoading();
                 showError('supplier-error', 'You already have an application submitted.');
                 return;
             }
@@ -348,12 +473,14 @@ function setupSupplierForm() {
 
             try {
                 await database.ref('applications').push(supplierData);
+                hideLoading();
                 alert('Your supplier application has been submitted successfully!');
                 hideAllModals();
                 supplierForm.reset();
                 const supplierSection = document.querySelector('.become-supplier');
                 if (supplierSection) supplierSection.style.display = 'none';
             } catch (error) {
+                hideLoading();
                 if (DEBUG) console.error("Supplier submission failed:", error.message);
                 showError('supplier-error', 'Submission failed: ' + error.message);
             }
@@ -369,9 +496,11 @@ function setupCenterForm() {
         centerForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             showError('center-error', '');
+            showLoading();
 
             const user = auth.currentUser;
             if (!user) {
+                hideLoading();
                 showError('center-error', 'You must be logged in to register a center.');
                 return;
             }
@@ -379,6 +508,7 @@ function setupCenterForm() {
             // Check for existing applications
             const hasExistingApp = await checkExistingApplications(user.uid);
             if (hasExistingApp) {
+                hideLoading();
                 showError('center-error', 'You already have an application submitted.');
                 return;
             }
@@ -389,11 +519,13 @@ function setupCenterForm() {
 
             if (file) {
                 if (file.size > 2 * 1024 * 1024) {
+                    hideLoading();
                     showError('center-error', 'Logo file size exceeds 2MB limit.');
                     return;
                 }
                 const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
                 if (!allowedTypes.includes(file.type)) {
+                    hideLoading();
                     showError('center-error', 'Only JPG, PNG, GIF images are allowed.');
                     return;
                 }
@@ -404,6 +536,7 @@ function setupCenterForm() {
                     imageUrl = await snapshot.ref.getDownloadURL();
                     if (DEBUG) console.log("Center logo uploaded:", imageUrl);
                 } catch (error) {
+                    hideLoading();
                     if (DEBUG) console.error("Logo upload error:", error.message);
                     showError('center-error', 'Failed to upload logo: ' + error.message);
                     return;
@@ -427,12 +560,14 @@ function setupCenterForm() {
 
             try {
                 await database.ref('applications').push(centerData);
+                hideLoading();
                 alert('Your center registration has been submitted successfully! We will review it shortly.');
                 hideAllModals();
                 centerForm.reset();
                 const centerSection = document.querySelector('.my-center');
                 if (centerSection) centerSection.style.display = 'none';
             } catch (error) {
+                hideLoading();
                 if (DEBUG) console.error("Center registration failed:", error.message);
                 showError('center-error', 'Registration failed: ' + error.message);
             }
@@ -487,6 +622,21 @@ async function checkExistingApplications(userId) {
     } catch (error) {
         console.error("Error checking applications:", error);
         return false;
+    }
+}
+
+// Show/hide loading spinner
+function showLoading() {
+    const loadingOverlay = document.getElementById('loading-overlay');
+    if (loadingOverlay) {
+        loadingOverlay.style.display = 'flex';
+    }
+}
+
+function hideLoading() {
+    const loadingOverlay = document.getElementById('loading-overlay');
+    if (loadingOverlay) {
+        loadingOverlay.style.display = 'none';
     }
 }
 

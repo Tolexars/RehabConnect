@@ -178,7 +178,7 @@ document.addEventListener('DOMContentLoaded', () => {
             centerType.textContent = centerData.centerType || 'Not specified';
             centerAddress.textContent = centerData.address || 'Not specified';
             centerHours.textContent = centerData.operatingHours || 'Not specified';
-            centerAccreditations.textContent = centerData.accreditations || 'None';
+            centerAccreditations.textContent = centerData.accreditations || '...';
             centerDescription.textContent = centerData.description || 'No description available';
         }
         // Handle regular user profile
