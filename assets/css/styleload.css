@@ -736,21 +736,33 @@ footer {
 
 
 /* Add these styles for the new sections */
-.join-practitioner, .my-center, .become-supplier {
-    padding: 3rem 1rem;
-    text-align: center;
-    margin: 2rem;
-    max-width: 800px;
+/* Registration Sections Container */
+.reg {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+    padding: 20px 20px 50px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Individual Registration Section Styles */
+.join-practitioner, 
+.my-center, 
+.become-supplier {
+    background: white;
     border-radius: 15px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    position: relative;
-    overflow: hidden;
-    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    padding: 2rem 1.5rem;
+    text-align: center;
+    width: 100%;
+    max-width: 350px;
+    transition: transform 0.3s ease;
 }
 
 .join-practitioner {
     border-top: 5px solid #00BCD4;
-    margin-top: 6rem;
 }
 
 .my-center {
@@ -761,12 +773,7 @@ footer {
     border-top: 5px solid #9C27B0;
 }
 
-.join-container, .center-container, .supplier-container {
-    position: relative;
-    z-index: 2;
-    padding: 1rem;
-}
-
+/* Icon Circle */
 .icon-circle {
     width: 80px;
     height: 80px;
@@ -784,7 +791,7 @@ footer {
 }
 
 .my-center .icon-circle {
-    background: rgba(120, 220, 140, 0.2);
+    background: rgba(40, 167, 69, 0.1);
     color: #28a745;
 }
 
@@ -793,62 +800,59 @@ footer {
     color: #9C27B0;
 }
 
-.regular-user .icon-circle {
-    background: rgba(0, 188, 212, 0.1);
-    color: linear-gradient(135deg, #00BCD4, #4CAF50);
-}
-
+/* Button Styles */
 .whatsapp-button {
     background: #00BCD4;
+    width: 80%;
     color: white;
     border: none;
     padding: 12px 30px;
     border-radius: 30px;
-    font-size: 1.1rem;
+    font-size: 1rem;
     cursor: pointer;
     transition: all 0.3s ease;
     font-weight: 600;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
     margin-top: 1rem;
     box-shadow: 0 4px 15px rgba(0, 188, 212, 0.3);
 }
 
 .my-center .whatsapp-button {
     background: #28a745;
-    box-shadow: 0 4px 15px rgba(120, 220, 140, 0.2);
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
 }
 
 .become-supplier .whatsapp-button {
     background: #9C27B0;
-    box-shadow: 0 4px 15px rgba(255, 152, 0, 0.3);
-}
-
-.regular-user .whatsapp-button {
-    background: linear-gradient(135deg, #00BCD4, #4CAF50);
-    box-shadow: 0 4-box-shadow: 0 4px 15px linear-gradient(135deg, #00a5bb, #2c6db5);
+    box-shadow: 0 4px 15px rgba(156, 39, 176, 0.3);
 }
 
 .whatsapp-button:hover {
     transform: translateY(-3px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.2);
 }
 
-.join-practitioner .whatsapp-button:hover {
-    background: #0097A7;
-}
-
-.my-center .whatsapp-button:hover {
-    background: #7B1FA2;
-}
-
-.become-supplier .whatsapp-button:hover {
-    background: #F57C00;
-}
-
-.regular-user .whatsapp-button:hover {
-    background: linear-gradient(135deg, #00a5bb, #2c6db5);
+/* Desktop Layout */
+@media (min-width: 992px) {
+    .reg {
+        flex-direction: row;
+        justify-content: center;
+        align-items: stretch;
+        padding: 150px 20px 80px;
+    }
+    
+    .join-practitioner,
+    .my-center,
+    .become-supplier {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .join-practitioner:hover,
+    .my-center:hover,
+    .become-supplier:hover {
+        transform: translateY(-10px);
+    }
 }
 
 /* Add decorative elements */
