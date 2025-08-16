@@ -24,25 +24,16 @@
   <button id="user-profile-btn" class="whatsapp-button22">Check Profile</button>
         </div>
    
-  <section class="regular-user">
-    <div class="user-container">
-        <div class="icon-circle">
-            <i class='bx bx-user'></i>
-        </div>
-        <h2>Join as a Regular User</h2>
-        <p>Create an account to connect with professionals and access resources</p>
-        <button id="user-register-btn" class="whatsapp-button">Sign Up Now</button>
-    </div>
-</section> 
+  
    
-   
+   <section class="reg">
     <section class="join-practitioner">
     <div class="join-container">
         <div class="icon-circle">
             <i class='bx bx-plus-medical'></i>
         </div>
-        <h2>Become a Practitioner</h2>
-        <p>Join our network of healthcare professionals and reach more patients</p>
+        <h2>Are you a health practitioner?</h2>
+        
         <button id="join-button" class="whatsapp-button">Join Now</button>
     </div>
 </section>
@@ -52,9 +43,9 @@
         <div class="icon-circle">
             <i class='bx bx-building-house'></i>
         </div>
-        <h2>Register Your Center</h2>
-        <p>List your rehabilitation center in our directory to connect with patients</p>
-        <button id="center-button" class="whatsapp-button">Register Center</button>
+        <h2>Register as an Organisation</h2>
+        
+        <button id="center-button" class="whatsapp-button">Register Now</button>
     </div>
 </section>
 
@@ -63,11 +54,12 @@
         <div class="icon-circle">
             <i class='bx bx-package'></i>
         </div>
-        <h2>Become a Supplier</h2>
-        <p>Join our network of trusted medical equipment providers</p>
+        <h2>Sell medical/therapy equipment</h2>
+        
         <button id="supplier-cta-btn" class="whatsapp-button">Apply Now</button>
     </div>
 </section>
+        </section>
 
 <div id="center-modal" class="modal">
     <div class="modal-content">
@@ -89,6 +81,9 @@
                     <option value="Hospital">Hospital</option>
                     <option value="School">School</option>
                     <option value="Home Care">Home Care</option>
+                    <option value="Non-governmental Organisation">Non-governmental Organisation</option>
+                    <option value="Technology Initiatives">Technology Initiatives</option>
+                    <option value="Mobile Services">Mobile Services</option>
                 </select>
             </div>
 
@@ -128,7 +123,8 @@
                 <small>Max file size: 2MB. JPG, PNG, GIF allowed.</small>
             </div>
             
-          
+            <div id="loading-overlay" style="display:none;">
+    <div class="spinner"></div>
 </div>
 
 
@@ -163,7 +159,8 @@
                 <textarea id="products-offered" rows="3" required></textarea>
             </div>
             
-           
+           <div id="loading-overlay" style="display:none;">
+    <div class="spinner"></div>
 </div>
 
             <button type="submit">Submit Application</button>
@@ -237,7 +234,8 @@
                 <small>Max file size: 2MB. JPG, PNG, GIF allowed.</small>
             </div>
             
-            
+            <div id="loading-overlay" style="display:none;">
+    <div class="spinner"></div>
 </div>
 
 
@@ -264,6 +262,13 @@
             <div class="form-group">
                 <input type="password" id="login-password" placeholder="Password" required>
             </div>
+            
+              <!-- Terms agreement -->
+            <div class="form-group terms-agreement">
+                
+                <label for="login-terms">By clicking the login button, you agree to our <a href="terms.html" target="_blank">Terms</a> and <a href="privacy.html" target="_blank">Privacy policy</a></label>
+            </div>
+            
             <button type="submit">Login</button>
             <div class="auth-switch">
         Don't have an account? <a href="#" id="show-register">Register</a>
@@ -282,6 +287,13 @@
                 <input type="password" id="register-password" 
                        placeholder="Password (min. 6 characters)" required>
             </div>
+            
+              <!-- Terms agreement -->
+            <div class="form-group terms-agreement">
+                
+                <label for="login-terms">By clicking the register button, you agree to our <a href="terms.html" target="_blank">Terms</a> and <a href="privacy.html" target="_blank">Privacy policy</a></label>
+            </div>
+            
             <button type="submit">Create Account</button>
             <div class="auth-switch">
         Already have an account? <a href="#" id="show-login">Login</a>
