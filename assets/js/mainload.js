@@ -408,7 +408,7 @@ function displayTools(toolsData) {
     
     if (toolsArray.length > 0) {
         // Show the tools section
-        document.getElementById('tools-section').style.display = 'block';
+        document.getElementById('tools-section');
         
         toolsArray.forEach(tool => {
             const toolCard = document.createElement('div');
