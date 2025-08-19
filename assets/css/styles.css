@@ -710,6 +710,53 @@ img {
 }
 
 
+/* Join Practitioner Section */
+.ai-therapists{
+    background: linear-gradient(135deg, #28a745, #3182ce);
+    color: white;
+    padding: 3rem 1rem;
+    text-align: center;
+    margin: 2rem 0;
+}
+
+.join-container22 {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.join-container22 h2 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    color: white;
+}
+
+.join-container22 p {
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+    opacity: 0.9;
+}
+
+.therapists-button {
+    background-color: #fffff;
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 1rem 2rem;
+    font-size: 1.25rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-block;
+    margin: 1rem 0;
+    width: 80%;
+}
+
+.therapists-button:hover {
+    background-color: #128C7E;
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+
 
 /* Centered Modern Footer */
 /* Modern Centered Footer */
@@ -1397,7 +1444,7 @@ button{
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #00BCD4, #4CAF50);
+  background: linear-gradient(135deg, #00BCD4, #28a745);
   color: white;
   border-radius: 50px;
   padding: 15px;
@@ -1438,6 +1485,59 @@ button{
 /* Tablet and Desktop adjustments */
 @media (min-width: 768px) {
   .floating-ai-button {
+    padding: 15px 25px;
+  }
+}
+
+.floating-ai-button22 {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #28a745, #00BCD4);
+  color: white;
+  border-radius: 50px;
+  padding: 15px;
+  text-decoration: none;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.floating-ai-button22:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(135deg, #00a5bb, #2c6db5);
+}
+
+.floating-ai-button22 i {
+  font-size: 28px;
+}
+
+.ai-button-text22 {
+  margin-left: 10px;
+  font-weight: 600;
+  font-size: 18px;
+}
+
+/* Hide text on mobile devices */
+@media (max-width: 767px) {
+  .ai-button-text22 {
+    font-size: 15px;
+  }
+  
+  .floating-ai-button22 {
+    padding: 15px;  
+    height: 50px;
+    border-radius: 50px;
+  }
+}
+
+/* Tablet and Desktop adjustments */
+@media (min-width: 768px) {
+  .floating-ai-button22 {
     padding: 15px 25px;
   }
 }
