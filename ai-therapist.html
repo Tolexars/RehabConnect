@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical Document Analysis Tool</title>
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <link rel="stylesheet" href="assets/css/ai-therapist.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <script src="https://unpkg.com/docx@7.8.2/build/index.js"></script>
+
+</head>
+<body>
+    <header class="l-header">
+        <!-- Navigation remains the same -->
+        <nav class="nav bd-grid">
+            <div>
+                <h2><span class="home__title-color">REHAB</span>VERVE</h2>
+            </div>
+            <div class="nav__menu" id="nav-menu">
+    <ul class="nav__list">
+       <li class="nav__item"><a href="#home" class="nav__link">Home</a></li>
+        <li class="nav__item"><a href="professionals.html?category=All" onclick="saveAppState()" class="nav__link">Professionals</a></li>
+        <li class="nav__item"><a href="centers.html" onclick="saveAppState()" class="nav__link">Centers</a></li>
+        <li class="nav__item"><a href="marketplace.html" onclick="saveAppState()" class="nav__link">Marketplace</a></li>
+        <li class="nav__item"><a href="tools.html" onclick="saveAppState()" class="nav__link">Tools</a></li>
+        <li class="nav__item" id="my-profile-nav-item" style="display: none;"><a href="users.html?id=${user.uid}" onclick="saveAppState()" class="nav__link">My Profile</a></li>
+        
+        <div class="auth-buttons">
+            <li class="nav_item"> <button id="login-btn" class="nav__link">Login</button></li>
+            
+        </div>
+    </ul>
+</div>
+<div class="nav__toggle" id="nav-toggle" style="display:none">
+    <i class='bx bx-menu'></i>
+</div>
+<div class="profile-image-nav" id="nav-toggle" style="display: none;">
+    <img src="" alt="" class="nav-profile-img">
+</div>
+        </nav>
+    </header>
+    <div class="ai-therapist-container">
+        <div class="ai-sidebar" id="aiSidebar">
+            <div class="sidebar-header">
+                <h2>RehabVerve AI</h2>
+            </div>
+            
+            <button class="new-conversation-btn" id="newConversationBtn">
+                <i class="fas fa-plus"></i>
+                New Conversation
+            </button>
+            
+            <button class="change-therapist" id="changeTherapistBtn">
+                    Change Therapist
+                    <i class="fas fa-recycle"></i>
+                </button>
+            
+            <div class="history-title">Conversation History</div>
+            
+            <div class="history-list" id="historyList">
+                </div>
+        </div>
+        
+        <div class="ai-main">
+            <div class="chat-header">
+                
+                
+            </div>
+            
+            <div class="therapist-selection" id="therapistSelection">
+                <div class="selection-title">
+                    <h2>Select Your AI Therapist</h2>
+                </div>
+                
+                <div class="therapist-grid">
+                    <div class="therapist-card" data-type="psychologist">
+                        <div class="therapist-icon">
+                            <i class="fas fa-brain"></i>
+                        </div>
+                        <h3>AI Psychologist</h3>
+                        <p>Specializing in mental health, emotional issues, and behavioral patterns</p>
+                    </div>
+                    
+                    <div class="therapist-card" data-type="physiotherapist">
+                        <div class="therapist-icon">
+                            <i class="fas fa-running"></i>
+                        </div>
+                        <h3>AI Physiotherapist</h3>
+                        <p>Expert in movement, exercise, and physical rehabilitation</p>
+                    </div>
+                    
+                    <div class="therapist-card" data-type="occupational">
+                        <div class="therapist-icon">
+                            <i class="fas fa-hands-helping"></i>
+                        </div>
+                        <h3>AI Occupational Therapist</h3>
+                        <p>Focuses on daily activities, work adaptation, and functional rehabilitation</p>
+                    </div>
+                    
+                    <div class="therapist-card" data-type="speech">
+                        <div class="therapist-icon">
+                            <i class="fas fa-comment-medical"></i>
+                        </div>
+                        <h3>AI Speech Therapist</h3>
+                        <p>Specializing in communication disorders and language development</p>
+                    </div>
+                    
+                    <div class="therapist-card" data-type="nurse">
+                        <div class="therapist-icon">
+                            <i class="fas fa-user-nurse"></i>
+                        </div>
+                        <h3>AI Nurse Consultant</h3>
+                        <p>General health advice, treatment information, and care coordination</p>
+                    </div>
+                    
+                    <div class="therapist-card" data-type="rehab">
+                        <div class="therapist-icon">
+                            <i class="fas fa-heartbeat"></i>
+                        </div>
+                        <h3>AI Rehabilitation Specialist</h3>
+                        <p>Comprehensive recovery plans for various conditions and injuries</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chat-container" id="chatContainer" style="display: none;">
+                <div class="chat-title">
+                <i id="selectedTherapistIcon"></i>    
+                    <h2 id="selectedTherapistTitle">Select a Therapist</h2>
+                </div>
+    <div class="chat-messages" id="chatMessages">
+        <!-- Messages will be inserted here -->
+    </div>
+    
+    <div class="typing-indicator" id="typingIndicator">
+        <div class="typing-dots">
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+        </div>
+        <span class="typing-text">AI Therapist is thinking...</span>
+    </div>
+    
+    <div class="chat-input-area">
+        <div class="input-container">
+            <textarea id="messageInput" placeholder="Message RehabVerve AI..." rows="1"></textarea>
+            <button id="sendButton" class="send-button">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M7 11L12 6L17 11M12 18V7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+            </button>
+        </div>
+        <div class="input-footer" style="display: none;">
+            <span class="disclaimer">RehabVerve AI can make mistakes. Consider checking important information.</span>
+        </div>
+    </div>
+</div>
+        </div>
+    </div>
+    
+    <div class="status-indicator loading" id="statusIndicator">
+        <i class="fas fa-sync fa-spin"></i>
+        <span>Connecting to AI service...</span>
+    </div>
+    
+    <button class="sidebar-toggle" id="sidebarToggle">
+        <i class="fas fa-history"></i>
+    </button>
+    
+    <!-- Add this just before the closing </body> tag in index.html -->
+<a href="ai-assistant.html" class="floating-ai-button">
+  <i class='bx bx-bot'></i>
+  <span class="ai-button-text">AI Assistant</span>
+</a>
+
+<a href="ai-therapist.html" class="floating-ai-button22">
+  <i class='bx bx-bot'></i>
+  <span class="ai-button-text">AI Therapist</span>
+</a>
+    <!-- Include jsPDF library for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <script src="https://www.gstatic.com/firebasejs/5.5.0/firebase.js"></script>
+    <script src="assets/js/configuration.js"></script>
+    <script src="assets/js/mainload.js"></script>
+    <script src="assets/js/auth22.js"></script>
+    <script src="assets/js/ai-therapist.js"></script>
+</body>
+</html>
