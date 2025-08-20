@@ -168,6 +168,37 @@
     <button class="sidebar-toggle" id="sidebarToggle">
         <i class="fas fa-history"></i>
     </button>
+
+    <!-- Add this to your HTML -->
+<!-- Updated auth-modal -->
+<div id="auth-modal" class="modal">
+    <div class="modal-content">
+        <span class="modal-close">&times;</span>
+        <!-- Login Form Only -->
+        <form id="login-form" class="auth-form active">
+            <h3>Login to your account</h3>
+            <div class="error-message" id="login-error"></div>
+            <div class="form-group">
+                <input type="email" id="login-email" placeholder="Email" required>
+            </div>
+            <div class="form-group">
+                <input type="password" id="login-password" placeholder="Password" required>
+            </div>
+            
+            <!-- Terms agreement -->
+            <div class="form-group terms-agreement">
+                
+                <label for="login-terms">By clicking the login button, you agree to the <a href="terms.html" target="_blank">Terms and Conditions</a></label>
+            </div>
+            
+            <button type="submit">Login</button>
+            
+            <!-- Registration link -->
+            <div class="register-link">
+                Don't have an account? <a href="registration.html">Register here</a>
+            </div>
+        </form>
+    </div>
     
     <!-- Add this just before the closing </body> tag in index.html -->
 <a href="ai-assistant.html" class="floating-ai-button">
