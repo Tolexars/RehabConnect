@@ -12,7 +12,7 @@ document.getElementById('product-image').alt = productTitle;
 document.getElementById('product-price').textContent = productPrice;
 let description = productDescription ? decodeURIComponent(productDescription) : 'No description available.';
 document.getElementById('product-description').innerHTML = description.replace(/\n/g, '<br>');
-document.getElementById('product-delivery').textContent = productDelivery || 'Free';
+document.getElementById('product-delivery').textContent = productDelivery || 'Delivery takes 2 to 3 working days, other details would be communicated';
 
 const publicKey = 'pk_live_4c70eb590578eaedff80c3ea23da34d711af4fec'; // Your Paystack public key
 
