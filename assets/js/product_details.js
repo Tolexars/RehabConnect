@@ -10,7 +10,8 @@ document.getElementById('product-title').textContent = productTitle;
 document.getElementById('product-image').src = productImg;
 document.getElementById('product-image').alt = productTitle;
 document.getElementById('product-price').textContent = productPrice;
-document.getElementById('product-description').textContent = productDescription || 'No description available.';
+let description = productDescription ? decodeURIComponent(productDescription) : 'No description available.';
+document.getElementById('product-description').innerHTML = description.replace(/\n/g, '<br>');
 document.getElementById('product-delivery').textContent = productDelivery || 'Free';
 
 const publicKey = 'pk_live_4c70eb590578eaedff80c3ea23da34d711af4fec'; // Your Paystack public key
