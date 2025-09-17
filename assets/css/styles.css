@@ -1622,3 +1622,120 @@ button{
 .register-link a:hover {
     text-decoration: underline;
 }
+
+/* Designs Section Styles */
+#designs-section {
+    padding: 20px;
+    background-color: white;
+    margin-bottom: 20px;
+    margin-top: 20px;
+    text-align: center;
+}
+
+.designs-slider-container {
+    position: relative;
+    margin: 20px auto;
+    overflow: hidden;
+    border-radius: 8px;
+    max-width: 1200px;
+    height: 300px;
+}
+
+.designs-slider {
+    display: flex;
+    transition: transform 0.5s ease;
+    height: 100%;
+}
+
+.design-slide {
+    min-width: 100%;
+    position: relative;
+    height: 100%;
+}
+
+.design-slide img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.designs-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    margin: 15px 0;
+}
+
+.designs-prev, .designs-next {
+    background: rgba(0, 188, 212, 0.7);
+    border: none;
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.designs-prev:hover, .designs-next:hover {
+    background: rgba(0, 188, 212, 1);
+}
+
+.designs-dots {
+    display: flex;
+    gap: 8px;
+}
+
+.designs-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.designs-dot.active {
+    background: #00BCD4;
+    transform: scale(1.2);
+}
+
+#view-more-designs {
+    background: linear-gradient(145deg, #00BCD4, #28a745);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+    filter: drop-shadow(0 0 7px #90A4AE);
+}
+
+#view-more-designs:hover {
+    background-color: #128C7E; /* Darker WhatsApp green */
+}
+
+/* Responsive adjustments */
+@media (min-width: 768px) {
+    .designs-slider-container {
+        height: 400px;
+    }
+}
+
+@media (min-width: 992px) {
+    .designs-slider-container {
+        height: 500px;
+    }
+    
+    #view-more-designs {
+        font-size: 1.2em;
+        padding: 15px 30px;
+    }
+}
