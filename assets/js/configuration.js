@@ -4,7 +4,7 @@ const config = {
     authDomain: "tolexars-ac868.firebaseapp.com",
     databaseURL: "https://tolexars-ac868-default-rtdb.firebaseio.com",
     projectId: "tolexars-ac868",
-    storageBucket: "tolexars-ac868.appspot.com",
+    storageBucket: "tolexars-ac868.firebasestorage.app",
     messagingSenderId: "148559800786"
 };
 firebase.initializeApp(config);
@@ -14,16 +14,34 @@ const database = firebase.database(); // Ensure firebase.database() is initializ
 const storage = firebase.storage(); // Ensure firebase.storage() is initialized
 
 
-// Replace these with your actual IDs:
-const ADMOB_UNIT_IDS = {
-  middle: 'YOUR_ADMOB_AD_UNIT_ID_1',
-  bottom: 'YOUR_ADMOB_AD_UNIT_ID_2'
-};
+// Add this function to your configuration.js file
+function trackUserVisit() {
+    // Check if user is logged in to get user ID, otherwise use anonymous
+    const user = firebase.auth().currentUser;
+    const userId = user ? user.uid : 'anonymous';
+    
+    // Get additional information about the visit
+    const visitData = {
+        timestamp: firebase.database.ServerValue.TIMESTAMP,
+        page: window.location.pathname,
+        userAgent: navigator.userAgent,
+        screenResolution: `${window.screen.width}x${window.screen.height}`,
+        language: navigator.language,
+        userId: userId
+    };
+    
+    // Push data to the 'visits' node in Firebase
+    const visitsRef = firebase.database().ref('visits');
+    visitsRef.push(visitData)
+        .catch(error => {
+            console.error('Error recording visit:', error);
+        });
+}
 
-const ADSENSE_CONFIG = {
-  client: 'ca-pub-4782711076571062',
-  slots: {
-    middle: '1234567890',
-    bottom: '9876543210'
-  }
-};
+// Call this function when the page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Wait for Firebase to initialize before tracking the visit
+    if (typeof firebase !== 'undefined') {
+        trackUserVisit();
+    }
+});
