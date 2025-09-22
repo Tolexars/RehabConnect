@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartRehab AI | RehabVerve</title>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap">
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <link rel="stylesheet" href="assets/css/smartnote.css">
+    <link rel="icon" href="assets/img/logo.png">
+</head>
+<body>
+    <header class="l-header">
+        <nav class="nav bd-grid">
+            <div>
+                <h2><span class="home__title-color">REHAB</span>VERVE</h2>
+            </div>
+            <div class="nav__menu" id="nav-menu">
+                <ul class="nav__list">
+                    <li class="nav__item"><a href="index.html" class="nav__link">Home</a></li>
+                    <li class="nav__item"><a href="professionals.html" class="nav__link">Professionals</a></li>
+                    <li class="nav__item"><a href="ai-therapist.html" class="nav__link">AI Therapist</a></li>
+                    <li class="nav__item"><a href="smart-noter.html" class="nav__link active-link">Smart Noter</a></li>
+                    <li class="nav__item" id="my-profile-nav-item" style="display: none;"><a href="users.html" class="nav__link">My Profile</a></li>
+                    
+                    <div class="auth-buttons">
+                        <li class="nav_item"> <button id="login-btn" class="nav__link">Login</button></li>
+                    </div>
+                </ul>
+            </div>
+            <div class="nav__toggle" id="nav-toggle" style="display:none">
+                <i class='bx bx-menu'></i>
+            </div>
+            <div class="profile-image-nav" style="display: none;">
+                <img src="" alt="" class="nav-profile-img" style="width: 40px; height: 40px; border-radius: 50%;">
+            </div>
+        </nav>
+    </header>
+
+    <main class="smart-noter-container">
+        <div class="smart-noter-header">
+            <h1>SmartRehab AI</h1>
+            <p>Transform your audio, video, and text into organized notes with AI-powered transcription</p>
+        </div>
+
+        <div class="input-methods" id="input-methods">
+            <div class="method-card" id="record-audio">
+                <div class="method-icon">
+                    <i class="fas fa-microphone"></i>
+                </div>
+                <h3>Record Audio</h3>
+                <p>Record with your microphone</p>
+            </div>
+
+            <div class="method-card" id="record-video">
+                <div class="method-icon">
+                    <i class="fas fa-video"></i>
+                </div>
+                <h3>Record Video</h3>
+                <p>Record with your camera</p>
+            </div>
+
+            <div class="method-card" id="upload-file">
+                <div class="method-icon">
+                    <i class="fas fa-file-upload"></i>
+                </div>
+                <h3>Upload File</h3>
+                <p>Upload audio or video files</p>
+                <input type="file" id="file-upload" accept="audio/*,video/*" style="display: none;">
+            </div>
+
+            <div class="method-card" id="text-input">
+                <div class="method-icon">
+                    <i class="fas fa-font"></i>
+                </div>
+                <h3>Type Text</h3>
+                <p>Manually enter or paste text</p>
+            </div>
+
+            <div class="method-card" id="youtube-url">
+                <div class="method-icon">
+                    <i class="fab fa-youtube"></i>
+                </div>
+                <h3>YouTube URL</h3>
+                <p>Transcribe from YouTube videos</p>
+            </div>
+        </div>
+
+        <div class="recording-section" id="recording-section">
+            <div class="section-header">
+                <h2>Audio Recording</h2>
+                <button class="back-to-methods" id="back-to-methods">
+                    <i class="fas fa-arrow-left"></i> Back to Input Methods
+                </button>
+            </div>
+            <div class="recording-controls">
+                <button id="start-recording" class="record-btn">
+                    <i class="fas fa-record-vinyl"></i> Start Recording
+                </button>
+                <button id="stop-recording" class="stop-btn" disabled>
+                    <i class="fas fa-stop"></i> Stop Recording
+                </button>
+                <div class="recording-timer" id="recording-timer">00:00:00</div>
+            </div>
+            <div class="recording-visualization" id="recording-visualization">
+                <canvas id="visualizer" width="400" height="100"></canvas>
+            </div>
+        </div>
+
+        <div class="youtube-input" id="youtube-input">
+            <div class="section-header">
+                <h2>YouTube Video Transcription</h2>
+                <button class="back-to-methods" id="back-to-methods-yt">
+                    <i class="fas fa-arrow-left"></i> Back to Input Methods
+                </button>
+            </div>
+            <div class="input-group">
+                <input type="text" id="youtube-url-input" placeholder="Paste YouTube URL here (e.g., https://www.youtube.com/watch?v=...)">
+                <button id="process-youtube" class="process-btn">Process</button>
+            </div>
+        </div>
+
+        <div class="text-input-area" id="text-input-area">
+            <div class="section-header">
+                <h2>Text Input</h2>
+                <button class="back-to-methods" id="back-to-methods-text">
+                    <i class="fas fa-arrow-left"></i> Back to Input Methods
+                </button>
+            </div>
+            <textarea id="text-input-field" placeholder="Type or paste your text here..."></textarea>
+            <button id="process-text" class="process-btn">Process Text</button>
+        </div>
+
+        <div class="processing-section" id="processing-section">
+            <div class="processing-spinner">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Processing your content with AI...</p>
+            </div>
+        </div>
+
+        <div class="results-section" id="results-section">
+            <div class="results-header">
+                <h2>Transcription Results</h2>
+                <div class="results-actions">
+                    <button id="copy-results" class="action-btn">
+                        <i class="fas fa-copy"></i> Copy
+                    </button>
+                    <button id="download-results" class="action-btn">
+                        <i class="fas fa-download"></i> Download
+                    </button>
+                    <button id="save-results" class="action-btn">
+                        <i class="fas fa-save"></i> Save
+                    </button>
+                </div>
+            </div>
+            <div class="transcription-results" id="transcription-results">
+                <!-- Results will appear here -->
+            </div>
+        </div>
+
+        <div class="history-section" id="history-section">
+            <h2>Recent Notes</h2>
+            <div class="history-list" id="history-list">
+                <p class="no-history">No notes yet. Create your first note!</p>
+            </div>
+        </div>
+    </main>
+
+    <footer class="modern-footer">
+        <div class="footer-content">
+            <div class="footer-column">
+                <h3>RehabVerve</h3>
+                <p>Transforming rehabilitation through innovative technology and compassionate care.</p>
+            </div>
+            <div class="footer-column">
+                <h3>Quick Links</h3>
+                <ul class="footer-links">
+                    <li><a href="index.html"><i class="fas fa-home"></i> Home</a></li>
+                    <li><a href="professionals.html"><i class="fas fa-user-md"></i> Professionals</a></li>
+                    <li><a href="ai-therapist.html"><i class="fas fa-robot"></i> AI Therapist</a></li>
+                    <li><a href="smart-noter.html"><i class="fas fa-sticky-note"></i> Smart Noter</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h3>Support</h3>
+                <ul class="footer-links">
+                    <li><a href="privacy.html"><i class="fas fa-shield-alt"></i> Privacy Policy</a></li>
+                    <li><a href="terms.html"><i class="fas fa-file-contract"></i> Terms of Service</a></li>
+                    <li><a href="contact.html"><i class="fas fa-envelope"></i> Contact Us</a></li>
+                    <li><a href="faq.html"><i class="fas fa-question-circle"></i> FAQ</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2025 RehabVerve. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Firebase and other scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/5.5.0/firebase.js"></script>
+    <script src="assets/js/configuration.js"></script>
+    <script src="assets/js/mainload.js"></script>
+    <script src="assets/js/auth22.js"></script>
+    <script src="assets/js/smartnote.js"></script>
+</body>
+</html>
