@@ -123,10 +123,11 @@ function setupEventListeners() {
         logoutBtn.addEventListener('click', () => {
             auth.signOut().then(() => {
                 if (DEBUG) console.log("User signed out successfully.");
-                // Redirect to homepage or refresh to reflect unauthenticated state
-                window.location.reload();
+                // Redirect to homepage
+                window.location.href = 'index.html';
             }).catch(error => {
                 console.error("Logout error:", error);
+                showErrorDialog('Logout Error', error.message);
             });
         });
     }
@@ -213,6 +214,44 @@ function hideAllModals() {
     });
 }
 
+// --- Error Dialog Function ---
+function showErrorDialog(title, message) {
+    // Create error dialog if it doesn't exist
+    let errorDialog = document.getElementById('error-dialog');
+    if (!errorDialog) {
+        errorDialog = document.createElement('div');
+        errorDialog.id = 'error-dialog';
+        errorDialog.className = 'modal';
+        errorDialog.innerHTML = `
+            <div class="modal-content" style="max-width: 400px;">
+                <span class="close">&times;</span>
+                <h3 style="color: #e74c3c;">${title}</h3>
+                <p id="error-dialog-message">${message}</p>
+                <button id="error-dialog-ok" class="whatsapp-button" style="margin-top: 20px; width: 100%;">OK</button>
+            </div>
+        `;
+        document.body.appendChild(errorDialog);
+
+        // Add event listeners for the error dialog
+        errorDialog.querySelector('.close').addEventListener('click', () => {
+            errorDialog.style.display = 'none';
+        });
+        errorDialog.querySelector('#error-dialog-ok').addEventListener('click', () => {
+            errorDialog.style.display = 'none';
+        });
+        errorDialog.addEventListener('click', (e) => {
+            if (e.target === errorDialog) {
+                errorDialog.style.display = 'none';
+            }
+        });
+    } else {
+        errorDialog.querySelector('h3').textContent = title;
+        errorDialog.querySelector('#error-dialog-message').textContent = message;
+    }
+
+    errorDialog.style.display = 'block';
+}
+
 // --- Authentication Forms ---
 function setupAuthForms() {
     if (DEBUG) console.log("Setting up auth forms...");
@@ -253,6 +292,7 @@ function setupAuthForms() {
             } catch (error) {
                 if (DEBUG) console.error("Login error:", error.message);
                 showError('login-error', error.message);
+                showErrorDialog('Login Failed', error.message);
             }
         });
     }
@@ -282,20 +322,14 @@ function setupAuthForms() {
 
                 if (DEBUG) console.log("Registration successful! User:", user.uid);
                 hideAllModals();
-                alert('Account created successfully! You are now logged in.');
+                
+                // Show success message and redirect to homepage
+                showSuccessMessage('Registration Successful', 'Account created successfully! You are now logged in.', true);
 
-                // Handle post-registration redirect (e.g., for AI Assistant or previous page)
-                const redirectTarget = sessionStorage.getItem('postAuthRedirect');
-                if (redirectTarget === 'ai-assistant') {
-                    sessionStorage.removeItem('postAuthRedirect');
-                    window.location.href = '/ai-assistant/';
-                } else {
-                    // Redirect to the previous page
-                    redirectToPreviousPage();
-                }
             } catch (error) {
                 if (DEBUG) console.error("Registration error:", error.message);
                 showError('register-error', error.message);
+                showErrorDialog('Registration Failed', error.message);
             }
         });
     }
@@ -334,42 +368,28 @@ function setupPractitionerForm() {
                 // 2. Validate and Upload License File (required)
                 if (licenseFile) {
                     if (licenseFile.size > 5 * 1024 * 1024) { // 5MB limit
-                        showError('practitioner-error', 'License file size exceeds 5MB limit.');
-                        await deleteUserAccount(user);
-                        hideLoading();
-                        return;
+                        throw new Error('License file size exceeds 5MB limit.');
                     }
                     const allowedFileTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
                     if (!allowedFileTypes.includes(licenseFile.type)) {
-                        showError('practitioner-error', 'Only JPG, PNG, GIF, PDF, DOC, and DOCX files are allowed for licenses.');
-                        await deleteUserAccount(user);
-                        hideLoading();
-                        return;
+                        throw new Error('Only JPG, PNG, GIF, PDF, DOC, and DOCX files are allowed for licenses.');
                     }
                     const licenseStorageRef = storage.ref('practitioner_licenses/' + user.uid + '/' + licenseFile.name);
                     const licenseSnapshot = await licenseStorageRef.put(licenseFile);
                     licenseUrl = await licenseSnapshot.ref.getDownloadURL();
                     if (DEBUG) console.log("Professional license uploaded:", licenseUrl);
                 } else {
-                    showError('practitioner-error', 'A professional license is required for registration.');
-                    await deleteUserAccount(user);
-                    hideLoading();
-                    return;
+                    throw new Error('A professional license is required for registration.');
                 }
 
                 // 3. Upload Profile Picture (if provided)
                 if (profilePictureFile) {
                     if (profilePictureFile.size > 2 * 1024 * 1024) { // 2MB limit
-                        showError('practitioner-error', 'Profile picture file size exceeds 2MB limit.');
-                        hideLoading();
-                        // Note: We don't delete the user here, just return to prevent saving.
-                        return;
+                        throw new Error('Profile picture file size exceeds 2MB limit.');
                     }
                     const allowedImageTypes = ['image/jpeg', 'image/png', 'image/gif'];
                     if (!allowedImageTypes.includes(profilePictureFile.type)) {
-                        showError('practitioner-error', 'Only JPG, PNG, GIF images are allowed for profile pictures.');
-                        hideLoading();
-                        return;
+                        throw new Error('Only JPG, PNG, GIF images are allowed for profile pictures.');
                     }
                     const profileStorageRef = storage.ref('profile_pictures/' + user.uid + '/' + profilePictureFile.name);
                     const snapshot = await profileStorageRef.put(profilePictureFile);
@@ -405,14 +425,16 @@ function setupPractitionerForm() {
                 await database.ref('applications').push(practitionerData); // Submit to applications
                 if (DEBUG) console.log("Practitioner application submitted.");
 
-                // Show success message and redirect
-                showSuccessMessage('practitioner-modal');
+                // Show success message and redirect to homepage
                 hideLoading();
+                showSuccessMessage('Application Submitted', 'Thank you for registering as a healthcare professional! Your application is under review.', true);
 
             } catch (error) {
                 if (DEBUG) console.error("Practitioner registration/submission failed:", error.message);
-                showError('practitioner-error', 'Registration failed: ' + error.message);
                 hideLoading();
+                showError('practitioner-error', error.message);
+                showErrorDialog('Registration Failed', error.message);
+                
                 // If user creation succeeded but subsequent steps failed, try to delete the user
                 if (user) {
                     await deleteUserAccount(user);
@@ -468,14 +490,16 @@ function setupSupplierForm() {
                 await database.ref('applications').push(supplierData); // Submit to applications
                 if (DEBUG) console.log("Supplier application submitted.");
 
-                // Show success message and redirect
-                showSuccessMessage('supplier-modal');
+                // Show success message and redirect to homepage
                 hideLoading();
+                showSuccessMessage('Application Submitted', 'Thank you for registering as a supplier! Your application is under review.', true);
 
             } catch (error) {
                 if (DEBUG) console.error("Supplier registration/submission failed:", error.message);
-                showError('supplier-error', 'Registration failed: ' + error.message);
                 hideLoading();
+                showError('supplier-error', error.message);
+                showErrorDialog('Registration Failed', error.message);
+                
                 if (user) {
                     await deleteUserAccount(user);
                 }
@@ -516,17 +540,11 @@ function setupCenterForm() {
                 // 2. Upload Center Logo (if provided)
                 if (file) {
                     if (file.size > 2 * 1024 * 1024) {
-                        showError('center-error', 'Logo file size exceeds 2MB limit.');
-                        await deleteUserAccount(user); // Attempt to delete partially created user
-                        hideLoading();
-                        return;
+                        throw new Error('Logo file size exceeds 2MB limit.');
                     }
                     const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
                     if (!allowedTypes.includes(file.type)) {
-                        showError('center-error', 'Only JPG, PNG, GIF images are allowed.');
-                        await deleteUserAccount(user); // Attempt to delete partially created user
-                        hideLoading();
-                        return;
+                        throw new Error('Only JPG, PNG, GIF images are allowed.');
                     }
 
                     const storageRef = storage.ref('center-logos/' + user.uid + '/' + file.name);
@@ -563,14 +581,16 @@ function setupCenterForm() {
                 await database.ref('applications').push(centerData); // Submit to applications
                 if (DEBUG) console.log("Center application submitted.");
 
-                // Show success message and redirect
-                showSuccessMessage('center-modal');
+                // Show success message and redirect to homepage
                 hideLoading();
+                showSuccessMessage('Application Submitted', 'Thank you for registering your center! Your application is under review.', true);
 
             } catch (error) {
                 if (DEBUG) console.error("Center registration/submission failed:", error.message);
-                showError('center-error', 'Registration failed: ' + error.message);
                 hideLoading();
+                showError('center-error', error.message);
+                showErrorDialog('Registration Failed', error.message);
+                
                 if (user) {
                     await deleteUserAccount(user);
                 }
@@ -602,31 +622,52 @@ function hideLoading() {
 }
 
 /**
- * Displays a success message and redirects after a delay.
- * @param {string} modalId - The ID of the modal to hide.
+ * Displays a success message and redirects to homepage after a delay.
+ * @param {string} title - The title of the success message.
+ * @param {string} message - The success message content.
+ * @param {boolean} redirectToHome - Whether to redirect to homepage.
  */
-function showSuccessMessage(modalId) {
-    const registrationStatusMessage = document.getElementById('registration-status-message');
-    const modal = document.getElementById(modalId);
+function showSuccessMessage(title, message, redirectToHome = true) {
+    // Create success dialog if it doesn't exist
+    let successDialog = document.getElementById('success-dialog');
+    if (!successDialog) {
+        successDialog = document.createElement('div');
+        successDialog.id = 'success-dialog';
+        successDialog.className = 'modal';
+        successDialog.innerHTML = `
+            <div class="modal-content" style="max-width: 400px; text-align: center;">
+                <h3 style="color: #27ae60;">${title}</h3>
+                <p id="success-dialog-message">${message}</p>
+                <button id="success-dialog-ok" class="whatsapp-button" style="margin-top: 20px; width: 100%; background-color: #27ae60;">
+                    OK
+                </button>
+            </div>
+        `;
+        document.body.appendChild(successDialog);
 
-    if (registrationStatusMessage && modal) {
-        modal.style.display = 'none'; // Hide the form modal
-        registrationStatusMessage.innerHTML = '<h2>Application Successful!</h2><p>Thank you for registering. You will be contacted shortly.</p>';
-        registrationStatusMessage.style.display = 'block';
-
-        // Redirect back to the previous page after 3 seconds
-        setTimeout(() => {
-            window.history.back();
-        }, 3000);
-    }
-}
-
-// Handles redirection to the previous page
-function redirectToPreviousPage() {
-    if (document.referrer && document.referrer !== window.location.href) {
-        window.location.href = document.referrer;
+        // Add event listener for the success dialog
+        successDialog.querySelector('#success-dialog-ok').addEventListener('click', () => {
+            successDialog.style.display = 'none';
+            if (redirectToHome) {
+                window.location.href = 'index.html';
+            }
+        });
     } else {
-        window.history.back(); // Fallback if referrer is not available or is the current page
+        successDialog.querySelector('h3').textContent = title;
+        successDialog.querySelector('#success-dialog-message').textContent = message;
+    }
+
+    successDialog.style.display = 'block';
+    hideAllModals();
+
+    // Auto-redirect after 5 seconds if user doesn't click OK
+    if (redirectToHome) {
+        setTimeout(() => {
+            if (successDialog.style.display === 'block') {
+                successDialog.style.display = 'none';
+                window.location.href = 'index.html';
+            }
+        }, 5000);
     }
 }
 
