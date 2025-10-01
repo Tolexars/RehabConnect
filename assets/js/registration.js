@@ -1,4 +1,4 @@
-// registration.js - Complete Implementation with Dynamic Section Visibility, Loading, and Redirection
+// registration.js - Fixed Implementation
 
 const DEBUG = true; // Set to true for console logs, false to disable
 
@@ -20,28 +20,6 @@ function initializeApp() {
     setupSupplierForm();
     setupPractitionerForm();
     setupCenterForm();
-
-    // Add AI Assistant button event listener (if it exists)
-    const aiAssistantButton = document.querySelector('.floating-ai-button');
-    if (aiAssistantButton) {
-        aiAssistantButton.addEventListener('click', function(e) {
-            const user = auth.currentUser;
-            if (!user) {
-                e.preventDefault();
-                sessionStorage.setItem('postAuthRedirect', 'ai-assistant');
-                showModal('auth-modal');
-            }
-        });
-    }
-
-    // Handle window resize for responsive UI adjustments
-    window.addEventListener('resize', () => {
-        if (auth.currentUser) {
-            handleAuthenticatedState(auth.currentUser);
-        } else {
-            handleUnauthenticatedState();
-        }
-    });
 }
 
 function setupEventListeners() {
@@ -52,28 +30,11 @@ function setupEventListeners() {
         btn.addEventListener('click', hideAllModals);
     });
 
-    // Regular User CTA - Only visible when unauthenticated
-    const userRegisterBtn = document.getElementById('user-register-btn');
-    if (userRegisterBtn) {
-        userRegisterBtn.addEventListener('click', () => {
-            const user = auth.currentUser;
-            if (DEBUG) console.log("Regular User CTA clicked. User:", user ? user.uid : "None");
-
-            if (user) {
-                alert('You are already registered and logged in!');
-            } else {
-                sessionStorage.removeItem('postAuthAction');
-                showModal('auth-modal');
-                switchToRegisterForm();
-            }
-        });
-    }
-
     // Supplier CTA
     const supplierCtaBtn = document.getElementById('supplier-cta-btn');
     if (supplierCtaBtn) {
         supplierCtaBtn.addEventListener('click', () => {
-            if (DEBUG) console.log("Supplier CTA clicked. Displaying supplier modal directly.");
+            if (DEBUG) console.log("Supplier CTA clicked.");
             showModal('supplier-modal');
         });
     }
@@ -83,7 +44,7 @@ function setupEventListeners() {
     if (joinButton) {
         joinButton.addEventListener('click', (e) => {
             e.preventDefault();
-            if (DEBUG) console.log("Join Practitioner button clicked. Displaying practitioner modal directly.");
+            if (DEBUG) console.log("Join Practitioner button clicked.");
             showModal('practitioner-modal');
         });
     }
@@ -93,17 +54,16 @@ function setupEventListeners() {
     if (centerButton) {
         centerButton.addEventListener('click', (e) => {
             e.preventDefault();
-            if (DEBUG) console.log("Center button clicked. Displaying center modal directly.");
+            if (DEBUG) console.log("Center button clicked.");
             showModal('center-modal');
         });
     }
 
-    // Login button (for the main navigation)
+    // Login button
     const loginBtn = document.getElementById('login-btn');
     if (loginBtn) {
         loginBtn.addEventListener('click', () => {
             if (DEBUG) console.log("Login button clicked.");
-            sessionStorage.removeItem('postAuthAction');
             showModal('auth-modal');
             switchToLoginForm();
         });
@@ -116,53 +76,18 @@ function setupEventListeners() {
         });
     });
 
-    // Logout button
-    const logoutBtn = document.getElementById('logout-btn');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', () => {
-            auth.signOut().then(() => {
-                if (DEBUG) console.log("User signed out successfully.");
-                window.location.href = 'index.html';
-            }).catch(error => {
-                console.error("Logout error:", error);
-                showErrorDialog('Logout failed: ' + error.message);
-            });
-        });
-    }
+    // Auth tab switching
+    document.getElementById('show-register')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        switchToRegisterForm();
+    });
 
-    // Profile image click (in navigation)
-    const profileImageNav = document.querySelector('.profile-image-nav');
-    if (profileImageNav) {
-        profileImageNav.addEventListener('click', () => {
-            const user = auth.currentUser;
-            if (user) {
-                const navMenu = document.getElementById('nav-menu');
-                if (window.innerWidth <= 991) {
-                    if (navMenu) {
-                        navMenu.classList.toggle('show');
-                    }
-                } else {
-                    window.location.href = `users.html?id=${user.uid}`;
-                }
-            } else {
-                showModal('auth-modal');
-            }
-        });
-    }
-
-    // Nav toggle (for mobile menu)
-    const navToggle = document.getElementById('nav-toggle');
-    if (navToggle) {
-        navToggle.addEventListener('click', () => {
-            const navMenu = document.getElementById('nav-menu');
-            if (navMenu) {
-                navMenu.classList.toggle('show');
-            }
-        });
-    }
+    document.getElementById('show-login')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        switchToLoginForm();
+    });
 }
 
-// --- Auth Switching Functions ---
 function switchToLoginForm() {
     if (DEBUG) console.log("Switching to login form");
     document.querySelector('.auth-tab[data-form="register"]')?.classList.remove('active');
@@ -179,7 +104,6 @@ function switchToRegisterForm() {
     document.getElementById('register-form')?.classList.add('active');
 }
 
-// --- Modal Management ---
 function showModal(modalId) {
     if (DEBUG) console.log("Showing modal:", modalId);
     const modal = document.getElementById(modalId);
@@ -192,22 +116,6 @@ function hideAllModals() {
     if (DEBUG) console.log("Hiding all modals");
     document.querySelectorAll('.modal').forEach(modal => {
         modal.style.display = 'none';
-        // Reset forms and clear errors when modals are hidden
-        if (modal.id === 'auth-modal') {
-            document.getElementById('login-form')?.reset();
-            showError('login-error', '');
-            document.getElementById('register-form')?.reset();
-            showError('register-error', '');
-        } else if (modal.id === 'supplier-modal') {
-            document.getElementById('supplier-form')?.reset();
-            showError('supplier-error', '');
-        } else if (modal.id === 'practitioner-modal') {
-            document.getElementById('practitioner-form')?.reset();
-            showError('practitioner-error', '');
-        } else if (modal.id === 'center-modal') {
-            document.getElementById('center-form')?.reset();
-            showError('center-error', '');
-        }
     });
 }
 
@@ -215,24 +123,12 @@ function hideAllModals() {
 function setupAuthForms() {
     if (DEBUG) console.log("Setting up auth forms...");
 
-    // Auth tab switching (Login/Register within the modal)
-    document.getElementById('show-register')?.addEventListener('click', (e) => {
-        e.preventDefault();
-        switchToRegisterForm();
-    });
-
-    document.getElementById('show-login')?.addEventListener('click', (e) => {
-        e.preventDefault();
-        switchToLoginForm();
-    });
-
     // Login Form Submission
     const loginForm = document.getElementById('login-form');
     if (loginForm) {
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             showError('login-error', '');
-            showLoading();
 
             const email = loginForm['login-email'].value;
             const password = loginForm['login-password'].value;
@@ -240,19 +136,10 @@ function setupAuthForms() {
             try {
                 await auth.signInWithEmailAndPassword(email, password);
                 if (DEBUG) console.log("Login successful!");
-                hideLoading();
-
-                // Handle post-login redirect
-                const redirectTarget = sessionStorage.getItem('postAuthRedirect');
-                if (redirectTarget === 'ai-assistant') {
-                    sessionStorage.removeItem('postAuthRedirect');
-                    window.location.href = '/ai-assistant/';
-                } else {
-                    handlePostLogin();
-                }
+                hideAllModals();
+                window.location.href = 'index.html';
             } catch (error) {
                 if (DEBUG) console.error("Login error:", error.message);
-                hideLoading();
                 showErrorDialog('Login failed: ' + error.message);
             }
         });
@@ -264,7 +151,6 @@ function setupAuthForms() {
         registerForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             showError('register-error', '');
-            showLoading();
 
             const name = registerForm['register-name'].value;
             const email = registerForm['register-email'].value;
@@ -282,18 +168,15 @@ function setupAuthForms() {
                     createdAt: firebase.database.ServerValue.TIMESTAMP
                 });
 
-                if (DEBUG) console.log("Registration successful! User:", user.uid);
-                hideLoading();
+                if (DEBUG) console.log("Regular user registration successful! User:", user.uid);
                 hideAllModals();
                 
-                // Show success message and redirect to homepage
                 showSuccessDialog('Account created successfully! You are now logged in.', () => {
                     window.location.href = 'index.html';
                 });
 
             } catch (error) {
                 if (DEBUG) console.error("Registration error:", error.message);
-                hideLoading();
                 showErrorDialog('Registration failed: ' + error.message);
             }
         });
@@ -308,7 +191,6 @@ function setupPractitionerForm() {
         practitionerForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             showError('practitioner-error', '');
-            showLoading();
 
             const fullName = practitionerForm['prof-name'].value;
             const email = practitionerForm['prof-email'].value;
@@ -325,52 +207,63 @@ function setupPractitionerForm() {
             let user = null;
 
             try {
+                console.log("Starting practitioner registration...");
+                
                 // 1. Create User Account
                 const userCredential = await auth.createUserWithEmailAndPassword(email, password);
                 user = userCredential.user;
-                if (DEBUG) console.log("Practitioner account created with UID:", user.uid);
+                console.log("Auth user created:", user.uid);
 
                 // 2. Validate and Upload License File (required)
-                if (licenseFile) {
-                    if (licenseFile.size > 5 * 1024 * 1024) {
-                        throw new Error('License file size exceeds 5MB limit.');
-                    }
-                    const allowedFileTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-                    if (!allowedFileTypes.includes(licenseFile.type)) {
-                        throw new Error('Only JPG, PNG, GIF, PDF, DOC, and DOCX files are allowed for licenses.');
-                    }
-                    const licenseStorageRef = storage.ref('practitioner_licenses/' + user.uid + '/' + licenseFile.name);
-                    const licenseSnapshot = await licenseStorageRef.put(licenseFile);
-                    licenseUrl = await licenseSnapshot.ref.getDownloadURL();
-                    if (DEBUG) console.log("Professional license uploaded:", licenseUrl);
-                } else {
+                if (!licenseFile) {
                     throw new Error('A professional license is required for registration.');
                 }
+
+                if (licenseFile.size > 5 * 1024 * 1024) {
+                    throw new Error('License file size exceeds 5MB limit.');
+                }
+
+                const allowedFileTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+                if (!allowedFileTypes.includes(licenseFile.type)) {
+                    throw new Error('Only JPG, PNG, GIF, PDF, DOC, and DOCX files are allowed for licenses.');
+                }
+
+                console.log("Uploading license file...");
+                const licenseStorageRef = storage.ref('practitioner_licenses/' + user.uid + '/' + licenseFile.name);
+                const licenseSnapshot = await licenseStorageRef.put(licenseFile);
+                licenseUrl = await licenseSnapshot.ref.getDownloadURL();
+                console.log("License uploaded:", licenseUrl);
 
                 // 3. Upload Profile Picture (if provided)
                 if (profilePictureFile) {
                     if (profilePictureFile.size > 2 * 1024 * 1024) {
                         throw new Error('Profile picture file size exceeds 2MB limit.');
                     }
+                    
                     const allowedImageTypes = ['image/jpeg', 'image/png', 'image/gif'];
                     if (!allowedImageTypes.includes(profilePictureFile.type)) {
                         throw new Error('Only JPG, PNG, GIF images are allowed for profile pictures.');
                     }
+                    
+                    console.log("Uploading profile picture...");
                     const profileStorageRef = storage.ref('profile_pictures/' + user.uid + '/' + profilePictureFile.name);
                     const snapshot = await profileStorageRef.put(profilePictureFile);
                     profileImageUrl = await snapshot.ref.getDownloadURL();
-                    if (DEBUG) console.log("Profile picture uploaded:", profileImageUrl);
+                    console.log("Profile picture uploaded:", profileImageUrl);
                 }
 
-                // 4. Save User Data (role: practitioner)
-                await database.ref('userdata/' + user.uid).set({
+                // 4. Save User Data to userdata
+                const userData = {
                     name: fullName,
                     email: email,
                     role: 'practitioner',
                     img: profileImageUrl,
                     createdAt: firebase.database.ServerValue.TIMESTAMP
-                });
-                if (DEBUG) console.log("User data saved for practitioner.");
+                };
+                
+                console.log("Saving user data to database...");
+                await database.ref('userdata/' + user.uid).set(userData);
+                console.log("User data saved successfully");
 
                 // 5. Save Practitioner Application Data
                 const practitionerData = {
@@ -387,28 +280,28 @@ function setupPractitionerForm() {
                     status: 'pending',
                     category: 'practitioner'
                 };
+                
+                console.log("Saving application data...");
                 await database.ref('applications').push(practitionerData);
-                if (DEBUG) console.log("Practitioner application submitted.");
+                console.log("Application data saved successfully");
 
-                hideLoading();
                 hideAllModals();
                 
-                // Show success message and redirect to homepage
                 showSuccessDialog('Application submitted successfully! You will be contacted shortly.', () => {
                     window.location.href = 'index.html';
                 });
 
             } catch (error) {
-                if (DEBUG) console.error("Practitioner registration/submission failed:", error.message);
-                hideLoading();
+                console.error("Practitioner registration failed:", error);
                 showErrorDialog('Registration failed: ' + error.message);
                 
-                // If user creation succeeded but subsequent steps failed, try to delete the user
+                // Clean up user if created but other steps failed
                 if (user) {
                     try {
-                        await deleteUserAccount(user);
+                        await user.delete();
+                        console.log("Cleaned up partially created user");
                     } catch (deleteError) {
-                        console.error("Error deleting user account:", deleteError);
+                        console.error("Error deleting user:", deleteError);
                     }
                 }
             }
@@ -424,7 +317,6 @@ function setupSupplierForm() {
         supplierForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             showError('supplier-error', '');
-            showLoading();
 
             const orgName = supplierForm['org-name'].value;
             const contactEmail = supplierForm['contact-email'].value;
@@ -434,19 +326,24 @@ function setupSupplierForm() {
             let user = null;
 
             try {
+                console.log("Starting supplier registration...");
+                
                 // 1. Create User Account
                 const userCredential = await auth.createUserWithEmailAndPassword(contactEmail, password);
                 user = userCredential.user;
-                if (DEBUG) console.log("Supplier account created with UID:", user.uid);
+                console.log("Auth user created:", user.uid);
 
-                // 2. Save User Data (role: supplier)
-                await database.ref('userdata/' + user.uid).set({
+                // 2. Save User Data to userdata
+                const userData = {
                     name: orgName,
                     email: contactEmail,
                     role: 'supplier',
                     createdAt: firebase.database.ServerValue.TIMESTAMP
-                });
-                if (DEBUG) console.log("User data saved for supplier.");
+                };
+                
+                console.log("Saving user data to database...");
+                await database.ref('userdata/' + user.uid).set(userData);
+                console.log("User data saved successfully");
 
                 // 3. Save Supplier Application Data
                 const supplierData = {
@@ -459,27 +356,27 @@ function setupSupplierForm() {
                     status: 'pending',
                     category: 'supplier'
                 };
+                
+                console.log("Saving application data...");
                 await database.ref('applications').push(supplierData);
-                if (DEBUG) console.log("Supplier application submitted.");
+                console.log("Application data saved successfully");
 
-                hideLoading();
                 hideAllModals();
                 
-                // Show success message and redirect to homepage
                 showSuccessDialog('Application submitted successfully! You will be contacted shortly.', () => {
                     window.location.href = 'index.html';
                 });
 
             } catch (error) {
-                if (DEBUG) console.error("Supplier registration/submission failed:", error.message);
-                hideLoading();
+                console.error("Supplier registration failed:", error);
                 showErrorDialog('Registration failed: ' + error.message);
                 
                 if (user) {
                     try {
-                        await deleteUserAccount(user);
+                        await user.delete();
+                        console.log("Cleaned up partially created user");
                     } catch (deleteError) {
-                        console.error("Error deleting user account:", deleteError);
+                        console.error("Error deleting user:", deleteError);
                     }
                 }
             }
@@ -495,7 +392,6 @@ function setupCenterForm() {
         centerForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             showError('center-error', '');
-            showLoading();
 
             const centerName = centerForm['center-name'].value;
             const centerType = centerForm['center-type'].value;
@@ -511,36 +407,43 @@ function setupCenterForm() {
             let user = null;
 
             try {
+                console.log("Starting center registration...");
+                
                 // 1. Create User Account
                 const userCredential = await auth.createUserWithEmailAndPassword(email, password);
                 user = userCredential.user;
-                if (DEBUG) console.log("Center account created with UID:", user.uid);
+                console.log("Auth user created:", user.uid);
 
                 // 2. Upload Center Logo (if provided)
                 if (file) {
                     if (file.size > 2 * 1024 * 1024) {
                         throw new Error('Logo file size exceeds 2MB limit.');
                     }
+                    
                     const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
                     if (!allowedTypes.includes(file.type)) {
                         throw new Error('Only JPG, PNG, GIF images are allowed.');
                     }
 
+                    console.log("Uploading center logo...");
                     const storageRef = storage.ref('center-logos/' + user.uid + '/' + file.name);
                     const snapshot = await storageRef.put(file);
                     imageUrl = await snapshot.ref.getDownloadURL();
-                    if (DEBUG) console.log("Center logo uploaded:", imageUrl);
+                    console.log("Center logo uploaded:", imageUrl);
                 }
 
-                // 3. Save User Data (role: center)
-                await database.ref('userdata/' + user.uid).set({
+                // 3. Save User Data to userdata
+                const userData = {
                     name: centerName,
                     email: email,
                     role: 'center',
                     img: imageUrl,
                     createdAt: firebase.database.ServerValue.TIMESTAMP
-                });
-                if (DEBUG) console.log("User data saved for center.");
+                };
+                
+                console.log("Saving user data to database...");
+                await database.ref('userdata/' + user.uid).set(userData);
+                console.log("User data saved successfully");
 
                 // 4. Save Center Application Data
                 const centerData = {
@@ -557,27 +460,27 @@ function setupCenterForm() {
                     status: 'pending',
                     category: 'center'
                 };
+                
+                console.log("Saving application data...");
                 await database.ref('applications').push(centerData);
-                if (DEBUG) console.log("Center application submitted.");
+                console.log("Application data saved successfully");
 
-                hideLoading();
                 hideAllModals();
                 
-                // Show success message and redirect to homepage
                 showSuccessDialog('Application submitted successfully! You will be contacted shortly.', () => {
                     window.location.href = 'index.html';
                 });
 
             } catch (error) {
-                if (DEBUG) console.error("Center registration/submission failed:", error.message);
-                hideLoading();
+                console.error("Center registration failed:", error);
                 showErrorDialog('Registration failed: ' + error.message);
                 
                 if (user) {
                     try {
-                        await deleteUserAccount(user);
+                        await user.delete();
+                        console.log("Cleaned up partially created user");
                     } catch (deleteError) {
-                        console.error("Error deleting user account:", deleteError);
+                        console.error("Error deleting user:", deleteError);
                     }
                 }
             }
@@ -588,29 +491,7 @@ function setupCenterForm() {
 // --- Helper Functions ---
 
 /**
- * Shows a loading overlay.
- */
-function showLoading() {
-    const loadingOverlay = document.getElementById('loading-overlay');
-    if (loadingOverlay) {
-        loadingOverlay.style.display = 'flex';
-    }
-}
-
-/**
- * Hides the loading overlay.
- */
-function hideLoading() {
-    const loadingOverlay = document.getElementById('loading-overlay');
-    if (loadingOverlay) {
-        loadingOverlay.style.display = 'none';
-    }
-}
-
-/**
  * Shows a success dialog with a message and optional callback
- * @param {string} message - The success message to display
- * @param {function} callback - Optional callback function to execute after user acknowledges
  */
 function showSuccessDialog(message, callback = null) {
     // Create or show success modal
@@ -658,7 +539,6 @@ function showSuccessDialog(message, callback = null) {
 
 /**
  * Shows an error dialog with a message
- * @param {string} message - The error message to display
  */
 function showErrorDialog(message) {
     // Create or show error modal
@@ -701,34 +581,7 @@ function showErrorDialog(message) {
     errorModal.style.display = 'block';
 }
 
-// Cleans up partially created user accounts if subsequent steps fail
-async function deleteUserAccount(user) {
-    if (user && auth.currentUser && auth.currentUser.uid === user.uid) {
-        try {
-            await auth.currentUser.delete();
-            if (DEBUG) console.warn("Cleaned up partially created user due to subsequent error.");
-        } catch (deleteError) {
-            if (DEBUG) console.error("Error deleting partially created user:", deleteError);
-        }
-    }
-}
-
-// Handles actions after successful login
-async function handlePostLogin() {
-    if (DEBUG) console.log("Handling post-login actions");
-    hideAllModals();
-
-    const redirectTarget = sessionStorage.getItem('postAuthRedirect');
-    if (redirectTarget === 'ai-assistant') {
-        sessionStorage.removeItem('postAuthRedirect');
-        window.location.href = '/ai-assistant/';
-    } else {
-        // Redirect to homepage after login
-        window.location.href = 'index.html';
-    }
-}
-
-// Displays error messages temporarily
+// Displays error messages in form
 function showError(elementId, message) {
     const errorElement = document.getElementById(elementId);
     if (errorElement) {
@@ -767,7 +620,7 @@ async function getExistingOverallStatus(userId) {
                 const app = childSnapshot.val();
                 if (app.status === 'pending') {
                     pendingCategory = app.category;
-                    return true; // Break forEach
+                    return true;
                 }
             });
             if (pendingCategory) {
@@ -775,33 +628,25 @@ async function getExistingOverallStatus(userId) {
             }
         }
 
-        return null; // No existing status found
+        return null;
     } catch (error) {
         console.error("Error checking existing overall status:", error);
         return { status: 'error' };
     }
 }
 
-// --- User State Handling (Authenticated/Unauthenticated) ---
+// --- User State Handling ---
 
 async function handleAuthenticatedState(user) {
     if (DEBUG) console.log("Handling authenticated state for user:", user.uid);
 
     const loginBtn = document.getElementById('login-btn');
-    const logoutBtn = document.getElementById('logout-btn');
-    const profileImageNav = document.querySelector('.profile-image-nav');
-    const navToggle = document.getElementById('nav-toggle');
-    const myProfileNavItem = document.getElementById('my-profile-nav-item');
-    const navMenu = document.getElementById('nav-menu');
-
-    const regularUserSection = document.querySelector('.regular-user');
     const joinPractitionerSection = document.querySelector('.join-practitioner');
     const myCenterSection = document.querySelector('.my-center');
     const becomeSupplierSection = document.querySelector('.become-supplier');
     const registrationStatusMessageContainer = document.getElementById('registration-status-message');
 
-    // Hide all registration sections by default when authenticated
-    if (regularUserSection) regularUserSection.style.display = 'none';
+    // Hide registration sections by default when authenticated
     if (joinPractitionerSection) joinPractitionerSection.style.display = 'none';
     if (myCenterSection) myCenterSection.style.display = 'none';
     if (becomeSupplierSection) becomeSupplierSection.style.display = 'none';
@@ -811,44 +656,12 @@ async function handleAuthenticatedState(user) {
     // Hide login button
     if (loginBtn) loginBtn.style.display = 'none';
 
-    // Show logout button
-    if (logoutBtn) {
-        const isUsersPage = window.location.pathname.includes('users.html');
-        const urlParams = new URLSearchParams(window.location.search);
-        const profileUserId = urlParams.get('id');
-        logoutBtn.style.display = (isUsersPage && user.uid === profileUserId) ? 'block' : 'none';
-    }
-
-    // Fetch user data to update profile image
+    // Fetch user data and check status
     database.ref('userdata/' + user.uid).once('value')
         .then(async snapshot => {
             const userData = snapshot.val();
-            const profileImageUrl = (userData && userData.img) ? userData.img : 'assets/img/profile.png';
-
-            const profileImageElement = profileImageNav?.querySelector('img');
-            if (profileImageElement) {
-                profileImageElement.src = profileImageUrl;
-            }
-
-            const myProfileLink = myProfileNavItem?.querySelector('a');
-            if (myProfileLink) {
-                myProfileLink.href = `users.html?id=${user.uid}`;
-            }
-
-            // Adjust nav visibility based on screen size
-            if (window.innerWidth <= 991) {
-                if (navToggle) navToggle.style.display = 'none';
-                if (profileImageNav) profileImageNav.style.display = 'block';
-                if (myProfileNavItem) myProfileNavItem.style.display = 'block';
-                if (navMenu) navMenu.classList.add('logged-in-mobile');
-            } else {
-                if (navToggle) navToggle.style.display = 'none';
-                if (profileImageNav) profileImageNav.style.display = 'block';
-                if (myProfileNavItem) myProfileNavItem.style.display = 'none';
-                if (navMenu) navMenu.classList.remove('logged-in-mobile');
-            }
-
-            // --- Dynamic Content Display based on User Role/Application Status ---
+            
+            // Check user status
             const userStatus = await getExistingOverallStatus(user.uid);
 
             if (userStatus) {
@@ -880,15 +693,6 @@ async function handleAuthenticatedState(user) {
                         `;
                         registrationStatusMessageContainer.style.display = 'block';
                     }
-                } else if (userStatus.status === 'error') {
-                    if (registrationStatusMessageContainer) {
-                        registrationStatusMessageContainer.innerHTML = `
-                            <p style="text-align: center; font-size: 1.5em; color: red; margin-top: 50px;">
-                                An error occurred while checking your registration status. Please try again later.
-                            </p>
-                        `;
-                        registrationStatusMessageContainer.style.display = 'block';
-                    }
                 }
             } else {
                 // User is logged in but is a regular user - show registration options
@@ -896,70 +700,27 @@ async function handleAuthenticatedState(user) {
                 if (myCenterSection) myCenterSection.style.display = 'block';
                 if (becomeSupplierSection) becomeSupplierSection.style.display = 'block';
             }
-
         })
         .catch(error => {
-            console.error("Error fetching user data or checking statuses:", error);
-            const profileImageElement = profileImageNav?.querySelector('img');
-            if (profileImageElement) {
-                profileImageElement.src = 'assets/img/default-profile.png';
-            }
-
-            if (window.innerWidth <= 991) {
-                if (navToggle) navToggle.style.display = 'none';
-                if (profileImageNav) profileImageNav.style.display = 'block';
-                if (myProfileNavItem) myProfileNavItem.style.display = 'block';
-            } else {
-                if (navToggle) navToggle.style.display = 'none';
-                if (profileImageNav) profileImageNav.style.display = 'block';
-                if (myProfileNavItem) myProfileNavItem.style.display = 'none';
-            }
+            console.error("Error fetching user data:", error);
         });
-
-    document.body.classList.add('logged-in');
 }
 
 function handleUnauthenticatedState() {
     if (DEBUG) console.log("Handling unauthenticated state.");
 
     const loginBtn = document.getElementById('login-btn');
-    const logoutBtn = document.getElementById('logout-btn');
-    const profileImageNav = document.querySelector('.profile-image-nav');
-    const navToggle = document.getElementById('nav-toggle');
-    const myProfileNavItem = document.getElementById('my-profile-nav-item');
-    const navMenu = document.getElementById('nav-menu');
-
-    const regularUserSection = document.querySelector('.regular-user');
     const joinPractitionerSection = document.querySelector('.join-practitioner');
     const myCenterSection = document.querySelector('.my-center');
     const becomeSupplierSection = document.querySelector('.become-supplier');
-    const registrationStatusMessageContainer = document.getElementById('registration-status-message');
 
     // Show all registration sections when unauthenticated
-    if (regularUserSection) regularUserSection.style.display = 'block';
     if (joinPractitionerSection) joinPractitionerSection.style.display = 'block';
     if (myCenterSection) myCenterSection.style.display = 'block';
     if (becomeSupplierSection) becomeSupplierSection.style.display = 'block';
-    if (registrationStatusMessageContainer) registrationStatusMessageContainer.style.display = 'none';
-    registrationStatusMessageContainer.innerHTML = '';
 
-    // Show login button, hide logout
+    // Show login button
     if (loginBtn) loginBtn.style.display = 'block';
-    if (logoutBtn) logoutBtn.style.display = 'none';
-
-    // Adjust nav visibility based on screen size
-    if (window.innerWidth <= 991) {
-        if (navToggle) navToggle.style.display = 'block';
-        if (profileImageNav) profileImageNav.style.display = 'none';
-        if (myProfileNavItem) myProfileNavItem.style.display = 'none';
-    } else {
-        if (navToggle) navToggle.style.display = 'none';
-        if (profileImageNav) profileImageNav.style.display = 'none';
-        if (myProfileNavItem) myProfileNavItem.style.display = 'none';
-    }
-
-    document.body.classList.remove('logged-in');
-    if (navMenu) navMenu.classList.remove('logged-in-mobile');
 }
 
 // Initialize the application when the DOM is fully loaded
