@@ -60,17 +60,16 @@ function setupEventListeners() {
             if (DEBUG) console.log("Regular User CTA clicked. User:", user ? user.uid : "None");
 
             if (user) {
-                // This scenario should ideally not happen if section is hidden correctly
                 alert('You are already registered and logged in!');
             } else {
-                sessionStorage.removeItem('postAuthAction'); // Clear any previous post-auth actions
+                sessionStorage.removeItem('postAuthAction');
                 showModal('auth-modal');
                 switchToRegisterForm();
             }
         });
     }
 
-    // Supplier CTA - Now handled by visibility in handleAuthenticatedState
+    // Supplier CTA
     const supplierCtaBtn = document.getElementById('supplier-cta-btn');
     if (supplierCtaBtn) {
         supplierCtaBtn.addEventListener('click', () => {
@@ -79,7 +78,7 @@ function setupEventListeners() {
         });
     }
 
-    // Practitioner CTA - Now handled by visibility in handleAuthenticatedState
+    // Practitioner CTA
     const joinButton = document.getElementById('join-button');
     if (joinButton) {
         joinButton.addEventListener('click', (e) => {
@@ -89,7 +88,7 @@ function setupEventListeners() {
         });
     }
 
-    // Center CTA - Now handled by visibility in handleAuthenticatedState
+    // Center CTA
     const centerButton = document.getElementById('center-button');
     if (centerButton) {
         centerButton.addEventListener('click', (e) => {
@@ -104,7 +103,7 @@ function setupEventListeners() {
     if (loginBtn) {
         loginBtn.addEventListener('click', () => {
             if (DEBUG) console.log("Login button clicked.");
-            sessionStorage.removeItem('postAuthAction'); // Clear any previous post-auth actions
+            sessionStorage.removeItem('postAuthAction');
             showModal('auth-modal');
             switchToLoginForm();
         });
@@ -123,11 +122,10 @@ function setupEventListeners() {
         logoutBtn.addEventListener('click', () => {
             auth.signOut().then(() => {
                 if (DEBUG) console.log("User signed out successfully.");
-                // Redirect to homepage
                 window.location.href = 'index.html';
             }).catch(error => {
                 console.error("Logout error:", error);
-                showErrorDialog('Logout Error', error.message);
+                showErrorDialog('Logout failed: ' + error.message);
             });
         });
     }
@@ -139,7 +137,6 @@ function setupEventListeners() {
             const user = auth.currentUser;
             if (user) {
                 const navMenu = document.getElementById('nav-menu');
-                // For smaller screens, toggle mobile menu. For larger, go to profile.
                 if (window.innerWidth <= 991) {
                     if (navMenu) {
                         navMenu.classList.toggle('show');
@@ -168,18 +165,18 @@ function setupEventListeners() {
 // --- Auth Switching Functions ---
 function switchToLoginForm() {
     if (DEBUG) console.log("Switching to login form");
-    document.querySelector('.auth-tab[data-form="register"]').classList.remove('active');
-    document.querySelector('.auth-tab[data-form="login"]').classList.add('active');
-    document.getElementById('register-form').classList.remove('active');
-    document.getElementById('login-form').classList.add('active');
+    document.querySelector('.auth-tab[data-form="register"]')?.classList.remove('active');
+    document.querySelector('.auth-tab[data-form="login"]')?.classList.add('active');
+    document.getElementById('register-form')?.classList.remove('active');
+    document.getElementById('login-form')?.classList.add('active');
 }
 
 function switchToRegisterForm() {
     if (DEBUG) console.log("Switching to register form");
-    document.querySelector('.auth-tab[data-form="login"]').classList.remove('active');
-    document.querySelector('.auth-tab[data-form="register"]').classList.add('active');
-    document.getElementById('login-form').classList.remove('active');
-    document.getElementById('register-form').classList.add('active');
+    document.querySelector('.auth-tab[data-form="login"]')?.classList.remove('active');
+    document.querySelector('.auth-tab[data-form="register"]')?.classList.add('active');
+    document.getElementById('login-form')?.classList.remove('active');
+    document.getElementById('register-form')?.classList.add('active');
 }
 
 // --- Modal Management ---
@@ -197,59 +194,21 @@ function hideAllModals() {
         modal.style.display = 'none';
         // Reset forms and clear errors when modals are hidden
         if (modal.id === 'auth-modal') {
-            document.getElementById('login-form').reset();
+            document.getElementById('login-form')?.reset();
             showError('login-error', '');
-            document.getElementById('register-form').reset();
+            document.getElementById('register-form')?.reset();
             showError('register-error', '');
         } else if (modal.id === 'supplier-modal') {
-            document.getElementById('supplier-form').reset();
+            document.getElementById('supplier-form')?.reset();
             showError('supplier-error', '');
         } else if (modal.id === 'practitioner-modal') {
-            document.getElementById('practitioner-form').reset();
+            document.getElementById('practitioner-form')?.reset();
             showError('practitioner-error', '');
         } else if (modal.id === 'center-modal') {
-            document.getElementById('center-form').reset();
+            document.getElementById('center-form')?.reset();
             showError('center-error', '');
         }
     });
-}
-
-// --- Error Dialog Function ---
-function showErrorDialog(title, message) {
-    // Create error dialog if it doesn't exist
-    let errorDialog = document.getElementById('error-dialog');
-    if (!errorDialog) {
-        errorDialog = document.createElement('div');
-        errorDialog.id = 'error-dialog';
-        errorDialog.className = 'modal';
-        errorDialog.innerHTML = `
-            <div class="modal-content" style="max-width: 400px;">
-                <span class="close">&times;</span>
-                <h3 style="color: #e74c3c;">${title}</h3>
-                <p id="error-dialog-message">${message}</p>
-                <button id="error-dialog-ok" class="whatsapp-button" style="margin-top: 20px; width: 100%;">OK</button>
-            </div>
-        `;
-        document.body.appendChild(errorDialog);
-
-        // Add event listeners for the error dialog
-        errorDialog.querySelector('.close').addEventListener('click', () => {
-            errorDialog.style.display = 'none';
-        });
-        errorDialog.querySelector('#error-dialog-ok').addEventListener('click', () => {
-            errorDialog.style.display = 'none';
-        });
-        errorDialog.addEventListener('click', (e) => {
-            if (e.target === errorDialog) {
-                errorDialog.style.display = 'none';
-            }
-        });
-    } else {
-        errorDialog.querySelector('h3').textContent = title;
-        errorDialog.querySelector('#error-dialog-message').textContent = message;
-    }
-
-    errorDialog.style.display = 'block';
 }
 
 // --- Authentication Forms ---
@@ -273,6 +232,7 @@ function setupAuthForms() {
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             showError('login-error', '');
+            showLoading();
 
             const email = loginForm['login-email'].value;
             const password = loginForm['login-password'].value;
@@ -280,8 +240,9 @@ function setupAuthForms() {
             try {
                 await auth.signInWithEmailAndPassword(email, password);
                 if (DEBUG) console.log("Login successful!");
+                hideLoading();
 
-                // Handle post-login redirect (e.g., for AI Assistant)
+                // Handle post-login redirect
                 const redirectTarget = sessionStorage.getItem('postAuthRedirect');
                 if (redirectTarget === 'ai-assistant') {
                     sessionStorage.removeItem('postAuthRedirect');
@@ -291,8 +252,8 @@ function setupAuthForms() {
                 }
             } catch (error) {
                 if (DEBUG) console.error("Login error:", error.message);
-                showError('login-error', error.message);
-                showErrorDialog('Login Failed', error.message);
+                hideLoading();
+                showErrorDialog('Login failed: ' + error.message);
             }
         });
     }
@@ -303,6 +264,7 @@ function setupAuthForms() {
         registerForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             showError('register-error', '');
+            showLoading();
 
             const name = registerForm['register-name'].value;
             const email = registerForm['register-email'].value;
@@ -321,15 +283,18 @@ function setupAuthForms() {
                 });
 
                 if (DEBUG) console.log("Registration successful! User:", user.uid);
+                hideLoading();
                 hideAllModals();
                 
                 // Show success message and redirect to homepage
-                showSuccessMessage('Registration Successful', 'Account created successfully! You are now logged in.', true);
+                showSuccessDialog('Account created successfully! You are now logged in.', () => {
+                    window.location.href = 'index.html';
+                });
 
             } catch (error) {
                 if (DEBUG) console.error("Registration error:", error.message);
-                showError('register-error', error.message);
-                showErrorDialog('Registration Failed', error.message);
+                hideLoading();
+                showErrorDialog('Registration failed: ' + error.message);
             }
         });
     }
@@ -343,7 +308,7 @@ function setupPractitionerForm() {
         practitionerForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             showError('practitioner-error', '');
-            showLoading(); // Show loading overlay
+            showLoading();
 
             const fullName = practitionerForm['prof-name'].value;
             const email = practitionerForm['prof-email'].value;
@@ -367,7 +332,7 @@ function setupPractitionerForm() {
 
                 // 2. Validate and Upload License File (required)
                 if (licenseFile) {
-                    if (licenseFile.size > 5 * 1024 * 1024) { // 5MB limit
+                    if (licenseFile.size > 5 * 1024 * 1024) {
                         throw new Error('License file size exceeds 5MB limit.');
                     }
                     const allowedFileTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
@@ -384,7 +349,7 @@ function setupPractitionerForm() {
 
                 // 3. Upload Profile Picture (if provided)
                 if (profilePictureFile) {
-                    if (profilePictureFile.size > 2 * 1024 * 1024) { // 2MB limit
+                    if (profilePictureFile.size > 2 * 1024 * 1024) {
                         throw new Error('Profile picture file size exceeds 2MB limit.');
                     }
                     const allowedImageTypes = ['image/jpeg', 'image/png', 'image/gif'];
@@ -402,7 +367,7 @@ function setupPractitionerForm() {
                     name: fullName,
                     email: email,
                     role: 'practitioner',
-                    img: profileImageUrl, // Store profile image URL
+                    img: profileImageUrl,
                     createdAt: firebase.database.ServerValue.TIMESTAMP
                 });
                 if (DEBUG) console.log("User data saved for practitioner.");
@@ -415,29 +380,36 @@ function setupPractitionerForm() {
                     specialty: specialty,
                     yearsExperience: yearsExperience,
                     bio: bio,
-                    licenseUrl: licenseUrl, // Store license file URL
-                    img: profileImageUrl, // Store profile image URL in application too
+                    licenseUrl: licenseUrl,
+                    img: profileImageUrl,
                     userId: user.uid,
                     timestamp: firebase.database.ServerValue.TIMESTAMP,
-                    status: 'pending', // Application status
+                    status: 'pending',
                     category: 'practitioner'
                 };
-                await database.ref('applications').push(practitionerData); // Submit to applications
+                await database.ref('applications').push(practitionerData);
                 if (DEBUG) console.log("Practitioner application submitted.");
 
-                // Show success message and redirect to homepage
                 hideLoading();
-                showSuccessMessage('Application Submitted', 'Thank you for registering as a healthcare professional! Your application is under review.', true);
+                hideAllModals();
+                
+                // Show success message and redirect to homepage
+                showSuccessDialog('Application submitted successfully! You will be contacted shortly.', () => {
+                    window.location.href = 'index.html';
+                });
 
             } catch (error) {
                 if (DEBUG) console.error("Practitioner registration/submission failed:", error.message);
                 hideLoading();
-                showError('practitioner-error', error.message);
-                showErrorDialog('Registration Failed', error.message);
+                showErrorDialog('Registration failed: ' + error.message);
                 
                 // If user creation succeeded but subsequent steps failed, try to delete the user
                 if (user) {
-                    await deleteUserAccount(user);
+                    try {
+                        await deleteUserAccount(user);
+                    } catch (deleteError) {
+                        console.error("Error deleting user account:", deleteError);
+                    }
                 }
             }
         });
@@ -452,7 +424,7 @@ function setupSupplierForm() {
         supplierForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             showError('supplier-error', '');
-            showLoading(); // Show loading overlay
+            showLoading();
 
             const orgName = supplierForm['org-name'].value;
             const contactEmail = supplierForm['contact-email'].value;
@@ -469,7 +441,7 @@ function setupSupplierForm() {
 
                 // 2. Save User Data (role: supplier)
                 await database.ref('userdata/' + user.uid).set({
-                    name: orgName, // Using orgName as the user's display name
+                    name: orgName,
                     email: contactEmail,
                     role: 'supplier',
                     createdAt: firebase.database.ServerValue.TIMESTAMP
@@ -484,24 +456,31 @@ function setupSupplierForm() {
                     productsOffered: productsOffered,
                     userId: user.uid,
                     timestamp: firebase.database.ServerValue.TIMESTAMP,
-                    status: 'pending', // Application status
+                    status: 'pending',
                     category: 'supplier'
                 };
-                await database.ref('applications').push(supplierData); // Submit to applications
+                await database.ref('applications').push(supplierData);
                 if (DEBUG) console.log("Supplier application submitted.");
 
-                // Show success message and redirect to homepage
                 hideLoading();
-                showSuccessMessage('Application Submitted', 'Thank you for registering as a supplier! Your application is under review.', true);
+                hideAllModals();
+                
+                // Show success message and redirect to homepage
+                showSuccessDialog('Application submitted successfully! You will be contacted shortly.', () => {
+                    window.location.href = 'index.html';
+                });
 
             } catch (error) {
                 if (DEBUG) console.error("Supplier registration/submission failed:", error.message);
                 hideLoading();
-                showError('supplier-error', error.message);
-                showErrorDialog('Registration Failed', error.message);
+                showErrorDialog('Registration failed: ' + error.message);
                 
                 if (user) {
-                    await deleteUserAccount(user);
+                    try {
+                        await deleteUserAccount(user);
+                    } catch (deleteError) {
+                        console.error("Error deleting user account:", deleteError);
+                    }
                 }
             }
         });
@@ -516,7 +495,7 @@ function setupCenterForm() {
         centerForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             showError('center-error', '');
-            showLoading(); // Show loading overlay
+            showLoading();
 
             const centerName = centerForm['center-name'].value;
             const centerType = centerForm['center-type'].value;
@@ -555,10 +534,10 @@ function setupCenterForm() {
 
                 // 3. Save User Data (role: center)
                 await database.ref('userdata/' + user.uid).set({
-                    name: centerName, // Using centerName as the user's display name
+                    name: centerName,
                     email: email,
                     role: 'center',
-                    img: imageUrl, // Save logo as user's profile image
+                    img: imageUrl,
                     createdAt: firebase.database.ServerValue.TIMESTAMP
                 });
                 if (DEBUG) console.log("User data saved for center.");
@@ -575,24 +554,31 @@ function setupCenterForm() {
                     logo: imageUrl,
                     userId: user.uid,
                     timestamp: firebase.database.ServerValue.TIMESTAMP,
-                    status: 'pending', // Application status
+                    status: 'pending',
                     category: 'center'
                 };
-                await database.ref('applications').push(centerData); // Submit to applications
+                await database.ref('applications').push(centerData);
                 if (DEBUG) console.log("Center application submitted.");
 
-                // Show success message and redirect to homepage
                 hideLoading();
-                showSuccessMessage('Application Submitted', 'Thank you for registering your center! Your application is under review.', true);
+                hideAllModals();
+                
+                // Show success message and redirect to homepage
+                showSuccessDialog('Application submitted successfully! You will be contacted shortly.', () => {
+                    window.location.href = 'index.html';
+                });
 
             } catch (error) {
                 if (DEBUG) console.error("Center registration/submission failed:", error.message);
                 hideLoading();
-                showError('center-error', error.message);
-                showErrorDialog('Registration Failed', error.message);
+                showErrorDialog('Registration failed: ' + error.message);
                 
                 if (user) {
-                    await deleteUserAccount(user);
+                    try {
+                        await deleteUserAccount(user);
+                    } catch (deleteError) {
+                        console.error("Error deleting user account:", deleteError);
+                    }
                 }
             }
         });
@@ -622,53 +608,97 @@ function hideLoading() {
 }
 
 /**
- * Displays a success message and redirects to homepage after a delay.
- * @param {string} title - The title of the success message.
- * @param {string} message - The success message content.
- * @param {boolean} redirectToHome - Whether to redirect to homepage.
+ * Shows a success dialog with a message and optional callback
+ * @param {string} message - The success message to display
+ * @param {function} callback - Optional callback function to execute after user acknowledges
  */
-function showSuccessMessage(title, message, redirectToHome = true) {
-    // Create success dialog if it doesn't exist
-    let successDialog = document.getElementById('success-dialog');
-    if (!successDialog) {
-        successDialog = document.createElement('div');
-        successDialog.id = 'success-dialog';
-        successDialog.className = 'modal';
-        successDialog.innerHTML = `
+function showSuccessDialog(message, callback = null) {
+    // Create or show success modal
+    let successModal = document.getElementById('success-modal');
+    
+    if (!successModal) {
+        // Create success modal if it doesn't exist
+        successModal = document.createElement('div');
+        successModal.id = 'success-modal';
+        successModal.className = 'modal';
+        successModal.innerHTML = `
             <div class="modal-content" style="max-width: 400px; text-align: center;">
-                <h3 style="color: #27ae60;">${title}</h3>
-                <p id="success-dialog-message">${message}</p>
-                <button id="success-dialog-ok" class="whatsapp-button" style="margin-top: 20px; width: 100%; background-color: #27ae60;">
-                    OK
-                </button>
+                <span class="close">&times;</span>
+                <div style="color: #28a745; font-size: 48px; margin: 20px 0;">✓</div>
+                <h3 style="color: #28a745;">Success!</h3>
+                <p id="success-message" style="margin: 20px 0;"></p>
+                <button id="success-ok-btn" class="whatsapp-button" style="margin-top: 20px;">OK</button>
             </div>
         `;
-        document.body.appendChild(successDialog);
-
-        // Add event listener for the success dialog
-        successDialog.querySelector('#success-dialog-ok').addEventListener('click', () => {
-            successDialog.style.display = 'none';
-            if (redirectToHome) {
-                window.location.href = 'index.html';
+        document.body.appendChild(successModal);
+        
+        // Add event listeners
+        successModal.querySelector('.close').addEventListener('click', () => {
+            successModal.style.display = 'none';
+            if (callback) callback();
+        });
+        
+        successModal.querySelector('#success-ok-btn').addEventListener('click', () => {
+            successModal.style.display = 'none';
+            if (callback) callback();
+        });
+        
+        // Close on background click
+        successModal.addEventListener('click', (e) => {
+            if (e.target === successModal) {
+                successModal.style.display = 'none';
+                if (callback) callback();
             }
         });
-    } else {
-        successDialog.querySelector('h3').textContent = title;
-        successDialog.querySelector('#success-dialog-message').textContent = message;
     }
+    
+    document.getElementById('success-message').textContent = message;
+    successModal.style.display = 'block';
+}
 
-    successDialog.style.display = 'block';
-    hideAllModals();
-
-    // Auto-redirect after 5 seconds if user doesn't click OK
-    if (redirectToHome) {
-        setTimeout(() => {
-            if (successDialog.style.display === 'block') {
-                successDialog.style.display = 'none';
-                window.location.href = 'index.html';
+/**
+ * Shows an error dialog with a message
+ * @param {string} message - The error message to display
+ */
+function showErrorDialog(message) {
+    // Create or show error modal
+    let errorModal = document.getElementById('error-modal');
+    
+    if (!errorModal) {
+        // Create error modal if it doesn't exist
+        errorModal = document.createElement('div');
+        errorModal.id = 'error-modal';
+        errorModal.className = 'modal';
+        errorModal.innerHTML = `
+            <div class="modal-content" style="max-width: 400px; text-align: center;">
+                <span class="close">&times;</span>
+                <div style="color: #dc3545; font-size: 48px; margin: 20px 0;">⚠️</div>
+                <h3 style="color: #dc3545;">Error</h3>
+                <p id="error-message" style="margin: 20px 0;"></p>
+                <button id="error-ok-btn" class="whatsapp-button" style="background-color: #dc3545; margin-top: 20px;">OK</button>
+            </div>
+        `;
+        document.body.appendChild(errorModal);
+        
+        // Add event listeners
+        errorModal.querySelector('.close').addEventListener('click', () => {
+            errorModal.style.display = 'none';
+        });
+        
+        errorModal.querySelector('#error-ok-btn').addEventListener('click', () => {
+            errorModal.style.display = 'none';
+        });
+        
+        // Close on background click
+        errorModal.addEventListener('click', (e) => {
+            if (e.target === errorModal) {
+                errorModal.style.display = 'none';
             }
-        }, 5000);
+        });
     }
+    
+    document.getElementById('error-message').textContent = message;
+    errorModal.style.display = 'block';
 }
 
 // Cleans up partially created user accounts if subsequent steps fail
@@ -683,7 +713,7 @@ async function deleteUserAccount(user) {
     }
 }
 
-// Handles actions after successful login (e.g., redirecting from AI assistant flow)
+// Handles actions after successful login
 async function handlePostLogin() {
     if (DEBUG) console.log("Handling post-login actions");
     hideAllModals();
@@ -693,10 +723,9 @@ async function handlePostLogin() {
         sessionStorage.removeItem('postAuthRedirect');
         window.location.href = '/ai-assistant/';
     } else {
-        // Since supplier/practitioner/center forms now handle registration directly,
-        // no other post-auth actions are needed here besides updating UI for logged-in state.
+        // Redirect to homepage after login
+        window.location.href = 'index.html';
     }
-    await handleAuthenticatedState(auth.currentUser);
 }
 
 // Displays error messages temporarily
@@ -709,16 +738,13 @@ function showError(elementId, message) {
             setTimeout(() => {
                 errorElement.style.display = 'none';
                 errorElement.textContent = '';
-            }, 5000); // Error message disappears after 5 seconds
+            }, 5000);
         }
     }
 }
 
 /**
  * Checks a user's existing status across applications and approved roles.
- * @param {string} userId - The UID of the user.
- * @returns {Promise<{status: string, roleName?: string}|null>} A promise that resolves to an object
- * with 'status' ('approved', 'pending', 'error') and 'roleName' if approved/pending. Returns null if no relevant status found.
  */
 async function getExistingOverallStatus(userId) {
     try {
@@ -758,7 +784,6 @@ async function getExistingOverallStatus(userId) {
 
 // --- User State Handling (Authenticated/Unauthenticated) ---
 
-// Updates UI when a user is logged in
 async function handleAuthenticatedState(user) {
     if (DEBUG) console.log("Handling authenticated state for user:", user.uid);
 
@@ -773,7 +798,7 @@ async function handleAuthenticatedState(user) {
     const joinPractitionerSection = document.querySelector('.join-practitioner');
     const myCenterSection = document.querySelector('.my-center');
     const becomeSupplierSection = document.querySelector('.become-supplier');
-    const registrationStatusMessageContainer = document.getElementById('registration-status-message'); // Ensure this div exists in your HTML
+    const registrationStatusMessageContainer = document.getElementById('registration-status-message');
 
     // Hide all registration sections by default when authenticated
     if (regularUserSection) regularUserSection.style.display = 'none';
@@ -781,12 +806,12 @@ async function handleAuthenticatedState(user) {
     if (myCenterSection) myCenterSection.style.display = 'none';
     if (becomeSupplierSection) becomeSupplierSection.style.display = 'none';
     if (registrationStatusMessageContainer) registrationStatusMessageContainer.style.display = 'none';
-    registrationStatusMessageContainer.innerHTML = ''; // Clear previous messages
+    registrationStatusMessageContainer.innerHTML = '';
 
     // Hide login button
     if (loginBtn) loginBtn.style.display = 'none';
 
-    // Show logout button (only if on a user's own profile page, otherwise hide for simplicity on this page)
+    // Show logout button
     if (logoutBtn) {
         const isUsersPage = window.location.pathname.includes('users.html');
         const urlParams = new URLSearchParams(window.location.search);
@@ -819,7 +844,7 @@ async function handleAuthenticatedState(user) {
             } else {
                 if (navToggle) navToggle.style.display = 'none';
                 if (profileImageNav) profileImageNav.style.display = 'block';
-                if (myProfileNavItem) myProfileNavItem.style.display = 'none'; // My Profile is in dropdown on desktop
+                if (myProfileNavItem) myProfileNavItem.style.display = 'none';
                 if (navMenu) navMenu.classList.remove('logged-in-mobile');
             }
 
@@ -828,7 +853,6 @@ async function handleAuthenticatedState(user) {
 
             if (userStatus) {
                 if (userStatus.status === 'approved') {
-                    // User is already an approved professional, supplier, or center
                     if (registrationStatusMessageContainer) {
                         let roleDisplayName = userStatus.roleName;
                         if (roleDisplayName === 'practitioner') roleDisplayName = 'a Professional';
@@ -843,7 +867,6 @@ async function handleAuthenticatedState(user) {
                         registrationStatusMessageContainer.style.display = 'block';
                     }
                 } else if (userStatus.status === 'pending') {
-                    // User has a pending application
                     if (registrationStatusMessageContainer) {
                         registrationStatusMessageContainer.innerHTML = `
                             <p style="text-align: center; font-size: 1.5em; color: #333; margin-top: 50px;">
@@ -858,7 +881,6 @@ async function handleAuthenticatedState(user) {
                         registrationStatusMessageContainer.style.display = 'block';
                     }
                 } else if (userStatus.status === 'error') {
-                    // Error occurred while checking status
                     if (registrationStatusMessageContainer) {
                         registrationStatusMessageContainer.innerHTML = `
                             <p style="text-align: center; font-size: 1.5em; color: red; margin-top: 50px;">
@@ -869,8 +891,7 @@ async function handleAuthenticatedState(user) {
                     }
                 }
             } else {
-                // User is logged in but is a regular user (or no specific role/pending application found).
-                // In this case, we want to show the professional/supplier/center sections.
+                // User is logged in but is a regular user - show registration options
                 if (joinPractitionerSection) joinPractitionerSection.style.display = 'block';
                 if (myCenterSection) myCenterSection.style.display = 'block';
                 if (becomeSupplierSection) becomeSupplierSection.style.display = 'block';
@@ -879,13 +900,11 @@ async function handleAuthenticatedState(user) {
         })
         .catch(error => {
             console.error("Error fetching user data or checking statuses:", error);
-            // Fallback for profile image if user data fetch fails
             const profileImageElement = profileImageNav?.querySelector('img');
             if (profileImageElement) {
                 profileImageElement.src = 'assets/img/default-profile.png';
             }
 
-            // Ensure proper display even on error
             if (window.innerWidth <= 991) {
                 if (navToggle) navToggle.style.display = 'none';
                 if (profileImageNav) profileImageNav.style.display = 'block';
@@ -900,7 +919,6 @@ async function handleAuthenticatedState(user) {
     document.body.classList.add('logged-in');
 }
 
-// Resets UI when no user is logged in
 function handleUnauthenticatedState() {
     if (DEBUG) console.log("Handling unauthenticated state.");
 
@@ -917,13 +935,13 @@ function handleUnauthenticatedState() {
     const becomeSupplierSection = document.querySelector('.become-supplier');
     const registrationStatusMessageContainer = document.getElementById('registration-status-message');
 
-    // Show all registration sections and hide status message when unauthenticated
+    // Show all registration sections when unauthenticated
     if (regularUserSection) regularUserSection.style.display = 'block';
     if (joinPractitionerSection) joinPractitionerSection.style.display = 'block';
     if (myCenterSection) myCenterSection.style.display = 'block';
     if (becomeSupplierSection) becomeSupplierSection.style.display = 'block';
     if (registrationStatusMessageContainer) registrationStatusMessageContainer.style.display = 'none';
-    registrationStatusMessageContainer.innerHTML = ''; // Clear message
+    registrationStatusMessageContainer.innerHTML = '';
 
     // Show login button, hide logout
     if (loginBtn) loginBtn.style.display = 'block';
