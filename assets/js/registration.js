@@ -1,4 +1,4 @@
-// registration.js - Fixed Implementation
+// registration.js - Fixed Implementation with Upload Progress
 
 const DEBUG = true; // Set to true for console logs, false to disable
 
@@ -183,6 +183,71 @@ function setupAuthForms() {
     }
 }
 
+// --- File Upload with Progress ---
+function createUploadProgress(fileName) {
+    const progressId = 'upload-progress-' + Date.now();
+    const progressHTML = `
+        <div id="${progressId}" class="upload-progress-container" style="margin: 10px 0; padding: 10px; background: #f5f5f5; border-radius: 5px;">
+            <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 5px;">
+                <span style="font-size: 14px; color: #333;">Uploading: ${fileName}</span>
+                <span id="${progressId}-percent" style="font-size: 12px; color: #666;">0%</span>
+            </div>
+            <div class="progress-bar" style="width: 100%; height: 6px; background: #ddd; border-radius: 3px; overflow: hidden;">
+                <div id="${progressId}-bar" style="width: 0%; height: 100%; background: #4CAF50; transition: width 0.3s ease;"></div>
+            </div>
+        </div>
+    `;
+    return { progressId, progressHTML };
+}
+
+function updateUploadProgress(progressId, percentage) {
+    const progressBar = document.getElementById(progressId + '-bar');
+    const progressPercent = document.getElementById(progressId + '-percent');
+    
+    if (progressBar) progressBar.style.width = percentage + '%';
+    if (progressPercent) progressPercent.textContent = Math.round(percentage) + '%';
+}
+
+function removeUploadProgress(progressId) {
+    const progressContainer = document.getElementById(progressId);
+    if (progressContainer) {
+        setTimeout(() => {
+            progressContainer.remove();
+        }, 1000);
+    }
+}
+
+function uploadFileWithProgress(file, storagePath, progressContainer) {
+    return new Promise((resolve, reject) => {
+        const storageRef = storage.ref(storagePath);
+        const uploadTask = storageRef.put(file);
+
+        uploadTask.on('state_changed',
+            (snapshot) => {
+                // Progress monitoring
+                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                const progressId = progressContainer.id;
+                updateUploadProgress(progressId, progress);
+            },
+            (error) => {
+                // Error handling
+                reject(error);
+            },
+            () => {
+                // Completion
+                uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
+                    const progressId = progressContainer.id;
+                    updateUploadProgress(progressId, 100);
+                    setTimeout(() => {
+                        removeUploadProgress(progressId);
+                    }, 500);
+                    resolve(downloadURL);
+                });
+            }
+        );
+    });
+}
+
 // --- Practitioner Form Handling ---
 function setupPractitionerForm() {
     if (DEBUG) console.log("Setting up practitioner form...");
@@ -229,9 +294,16 @@ function setupPractitionerForm() {
                 }
 
                 console.log("Uploading license file...");
-                const licenseStorageRef = storage.ref('practitioner_licenses/' + user.uid + '/' + licenseFile.name);
-                const licenseSnapshot = await licenseStorageRef.put(licenseFile);
-                licenseUrl = await licenseSnapshot.ref.getDownloadURL();
+                // Create progress container for license upload
+                const licenseProgress = createUploadProgress(licenseFile.name);
+                document.getElementById('practitioner-form').insertAdjacentHTML('beforeend', licenseProgress.progressHTML);
+                const licenseProgressContainer = document.getElementById(licenseProgress.progressId);
+
+                licenseUrl = await uploadFileWithProgress(
+                    licenseFile, 
+                    'practitioner_licenses/' + user.uid + '/' + licenseFile.name,
+                    licenseProgressContainer
+                );
                 console.log("License uploaded:", licenseUrl);
 
                 // 3. Upload Profile Picture (if provided)
@@ -246,9 +318,16 @@ function setupPractitionerForm() {
                     }
                     
                     console.log("Uploading profile picture...");
-                    const profileStorageRef = storage.ref('profile_pictures/' + user.uid + '/' + profilePictureFile.name);
-                    const snapshot = await profileStorageRef.put(profilePictureFile);
-                    profileImageUrl = await snapshot.ref.getDownloadURL();
+                    // Create progress container for profile picture upload
+                    const profileProgress = createUploadProgress(profilePictureFile.name);
+                    document.getElementById('practitioner-form').insertAdjacentHTML('beforeend', profileProgress.progressHTML);
+                    const profileProgressContainer = document.getElementById(profileProgress.progressId);
+
+                    profileImageUrl = await uploadFileWithProgress(
+                        profilePictureFile,
+                        'profile_pictures/' + user.uid + '/' + profilePictureFile.name,
+                        profileProgressContainer
+                    );
                     console.log("Profile picture uploaded:", profileImageUrl);
                 }
 
@@ -426,9 +505,16 @@ function setupCenterForm() {
                     }
 
                     console.log("Uploading center logo...");
-                    const storageRef = storage.ref('center-logos/' + user.uid + '/' + file.name);
-                    const snapshot = await storageRef.put(file);
-                    imageUrl = await snapshot.ref.getDownloadURL();
+                    // Create progress container for logo upload
+                    const logoProgress = createUploadProgress(file.name);
+                    document.getElementById('center-form').insertAdjacentHTML('beforeend', logoProgress.progressHTML);
+                    const logoProgressContainer = document.getElementById(logoProgress.progressId);
+
+                    imageUrl = await uploadFileWithProgress(
+                        file,
+                        'center-logos/' + user.uid + '/' + file.name,
+                        logoProgressContainer
+                    );
                     console.log("Center logo uploaded:", imageUrl);
                 }
 
@@ -494,11 +580,9 @@ function setupCenterForm() {
  * Shows a success dialog with a message and optional callback
  */
 function showSuccessDialog(message, callback = null) {
-    // Create or show success modal
     let successModal = document.getElementById('success-modal');
     
     if (!successModal) {
-        // Create success modal if it doesn't exist
         successModal = document.createElement('div');
         successModal.id = 'success-modal';
         successModal.className = 'modal';
@@ -513,7 +597,6 @@ function showSuccessDialog(message, callback = null) {
         `;
         document.body.appendChild(successModal);
         
-        // Add event listeners
         successModal.querySelector('.close').addEventListener('click', () => {
             successModal.style.display = 'none';
             if (callback) callback();
@@ -524,7 +607,6 @@ function showSuccessDialog(message, callback = null) {
             if (callback) callback();
         });
         
-        // Close on background click
         successModal.addEventListener('click', (e) => {
             if (e.target === successModal) {
                 successModal.style.display = 'none';
@@ -541,11 +623,9 @@ function showSuccessDialog(message, callback = null) {
  * Shows an error dialog with a message
  */
 function showErrorDialog(message) {
-    // Create or show error modal
     let errorModal = document.getElementById('error-modal');
     
     if (!errorModal) {
-        // Create error modal if it doesn't exist
         errorModal = document.createElement('div');
         errorModal.id = 'error-modal';
         errorModal.className = 'modal';
@@ -560,7 +640,6 @@ function showErrorDialog(message) {
         `;
         document.body.appendChild(errorModal);
         
-        // Add event listeners
         errorModal.querySelector('.close').addEventListener('click', () => {
             errorModal.style.display = 'none';
         });
@@ -569,7 +648,6 @@ function showErrorDialog(message) {
             errorModal.style.display = 'none';
         });
         
-        // Close on background click
         errorModal.addEventListener('click', (e) => {
             if (e.target === errorModal) {
                 errorModal.style.display = 'none';
